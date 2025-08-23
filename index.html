@@ -89,8 +89,8 @@
     <!-- Script di gestione del login -->
     <script>
       (function() {
-        const correctUser = 'Claudio Lupica Rinato';
-        const correctPass = 'Andrea17041992.';
+        const correctUser = 'Claudio';
+        const correctPass = 'Andrea';
         
         const loginForm = document.getElementById('login-form');
         const usernameInput = document.getElementById('username');
@@ -160,6 +160,37 @@ import { GoogleGenAI, Type } from "@google/genai";
 const GEMINI_API_KEY = "AIzaSyDbUj5kaq3UJsPhov-Ex6VdHIM0fMX31yU";
 // -------------------------------------------------------------------
 
+// --- LocalStorage Helper Functions ---
+const TASKS_STORAGE_KEY = 'celerya-tasks';
+const NOTES_STORAGE_KEY = 'celerya-agenda-notes';
+
+const getTasks = () => {
+    try {
+        const storedTasks = localStorage.getItem(TASKS_STORAGE_KEY);
+        return storedTasks ? JSON.parse(storedTasks) : [];
+    } catch (error) {
+        console.error("Failed to load tasks from localStorage", error);
+        return [];
+    }
+}
+
+const saveTasks = (tasks) => {
+     try {
+        localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
+    } catch (error) {
+        console.error("Failed to save tasks to localStorage", error);
+    }
+}
+
+const getNotes = () => {
+    try {
+        const storedNotes = localStorage.getItem(NOTES_STORAGE_KEY);
+        return storedNotes ? JSON.parse(storedNotes) : [];
+    } catch (error) {
+        console.error("Failed to load notes from localStorage", error);
+        return [];
+    }
+}
 
 // --- Contenuto da data/demo.ts ---
 const demoData = {
@@ -170,10 +201,10 @@ const demoData = {
   "screens": [
     {
       "id": "start",
-      "type": "title",
+      "type": "dashboard",
       "text": {
-        "Italiano": "Celerya®\nGoditi il tuo business.",
-        "English": "Celerya®\nEnjoy your business."
+        "Italiano": "Dashboard\nLa tua Home Intelligente",
+        "English": "Dashboard\nYour Smart Home"
       },
       "actions": [
         { "label": { "Italiano": "Perché Celerya", "English": "Why Celerya" }, "action": "next", "target": "why_presentation" },
@@ -204,6 +235,14 @@ const demoData = {
         { 
           "label": { "Italiano": "Whimsical", "English": "Whimsical" }, 
           "href": "https://whimsical.com/master-of-scale-strategy-JHmnzeHziW1XzwMRisbhzS" 
+        },
+        { 
+          "label": { "Italiano": "WhatsApp", "English": "WhatsApp" }, 
+          "href": "https://web.whatsapp.com/" 
+        },
+        { 
+          "label": { "Italiano": "Telegram", "English": "Telegram" }, 
+          "href": "https://web.telegram.org/a/" 
         }
       ],
       "actions": [
@@ -549,6 +588,26 @@ const PlusIcon = (props) => (
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
     </svg>
 );
+const PaperClipIcon = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3.375 3.375 0 1118.374 9.42l-10.94 10.94a2.25 2.25 0 01-3.182-3.182l7.693-7.693a.75.75 0 011.06 1.06l-7.693 7.693a1.125 1.125 0 001.591 1.591l10.94-10.94a2.25 2.25 0 10-3.182-3.182L5.625 14.125a3.375 3.375 0 004.773 4.773l7.693-7.693a.75.75 0 011.06-1.06z" />
+    </svg>
+);
+const XMarkIcon = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+);
+const UserIcon = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+);
+const CeleryaAiIcon = (props) => (
+    <div className="bg-gradient-to-br from-sky-500 to-blue-600 rounded-full p-1.5 flex items-center justify-center shadow">
+        <SparklesIcon className="h-5 w-5 text-white" />
+    </div>
+);
 
 
 // --- Contenuto da components/LanguageSelector.tsx ---
@@ -594,9 +653,9 @@ const TitleScreen = ({ text, actions, onNavigate, language }) => {
   return (
     <div className="text-center flex flex-col items-center justify-center min-h-[400px] p-4 animate-fade-in">
       <div className="relative inline-block">
-        <h1 className="text-6xl sm:text-8xl md:text-9xl font-bold" style={{ color: '#2D5F9D' }}>
-          {mainTitle}
-          <sup className="text-3xl sm:text-4xl md:text-5xl top-[-2em] sm:top-[-2.5em] ml-1 sm:ml-2">®</sup>
+        <h1 className="text-8xl sm:text-9xl md:text-[10rem] font-bold flex items-start justify-center" style={{ color: '#2D5F9D' }}>
+          <span>{mainTitle}</span>
+          <span className="text-5xl sm:text-6xl md:text-7xl ml-2" style={{lineHeight: 0.8}}>®</span>
         </h1>
         <div 
           className="w-full h-1 absolute -bottom-1"
@@ -608,17 +667,17 @@ const TitleScreen = ({ text, actions, onNavigate, language }) => {
         ></div>
       </div>
       
-      <p className="text-2xl sm:text-4xl md:text-5xl text-slate-600 mt-12 mb-6">
+      <p className="text-4xl sm:text-5xl md:text-6xl text-slate-600 mt-16 mb-8">
         {subtitle}
       </p>
 
       {slogan && (
-        <p className="text-xl sm:text-3xl md:text-4xl text-slate-500 italic mb-10 sm:mb-20">
+        <p className="text-2xl sm:text-4xl md:text-5xl text-slate-500 italic mb-12 sm:mb-24">
           "{slogan}"
         </p>
       )}
 
-      <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mt-12">
+      <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 mt-16">
         {actions.map((action) => {
            const isGreen = action.color === 'green';
            const bgColor = isGreen ? '#16a34a' : '#3B74B8';
@@ -630,7 +689,7 @@ const TitleScreen = ({ text, actions, onNavigate, language }) => {
             <button 
               key={action.target}
               onClick={() => handleAction(action)}
-              className="min-w-[200px] sm:min-w-[240px] flex items-center justify-center px-8 sm:px-10 py-4 sm:py-5 text-white font-bold text-xl sm:text-2xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50"
+              className="min-w-[280px] sm:min-w-[320px] flex items-center justify-center px-10 sm:px-12 py-5 sm:py-6 text-white font-bold text-2xl sm:text-3xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50"
               style={{ 
                 backgroundColor: bgColor, 
                 boxShadow: `0 10px 15px -3px ${shadowColor}, 0 4px 6px -2px ${shadowColorLight}`,
@@ -659,21 +718,21 @@ const SummaryScreen = ({ text, actions, onNavigate, language }) => {
 
   return (
     <div className="bg-white border border-gray-200/90 rounded-2xl shadow-xl p-6 sm:p-8 md:p-12 flex flex-col items-center text-center animate-slide-up-fade">
-      <div className="mb-6 sm:mb-8 bg-green-100 p-4 sm:p-6 rounded-full">
-        <CheckCircleIcon className="h-16 w-16 sm:h-24 sm:w-24 text-green-500" />
+      <div className="mb-8 sm:mb-10 bg-green-100 p-6 sm:p-8 rounded-full">
+        <CheckCircleIcon className="h-20 w-20 sm:h-28 sm:w-28 text-green-500" />
       </div>
-      <h2 className="text-4xl sm:text-6xl font-bold text-slate-800 mb-6 flex items-center gap-3">
-        {title} {actions.length === 1 && <SparklesIcon className="h-8 w-8 sm:h-10 sm:w-10 text-yellow-400" />}
+      <h2 className="text-5xl sm:text-7xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+        {title} {actions.length === 1 && <SparklesIcon className="h-10 w-10 sm:h-12 sm:w-12 text-yellow-400" />}
       </h2>
-      <p className="text-lg sm:text-2xl text-slate-500 max-w-lg mb-8 whitespace-pre-line">{descriptionParts.join('\n')}</p>
-      {lastLine && <p className="text-xl sm:text-3xl font-semibold max-w-lg mb-12" style={{color: '#2D5F9D'}}>{lastLine}</p>}
+      <p className="text-xl sm:text-3xl text-slate-500 max-w-lg mb-8 whitespace-pre-line">{descriptionParts.join('\n')}</p>
+      {lastLine && <p className="text-2xl sm:text-4xl font-semibold max-w-lg mb-12" style={{color: '#2D5F9D'}}>{lastLine}</p>}
 
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-4">
         {actions.map((action, index) => (
           <button
             key={index}
             onClick={() => handleAction(action)}
-            className="px-8 sm:px-10 py-3 sm:py-4 text-lg sm:text-xl font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8]"
+            className="px-10 sm:px-12 py-4 sm:py-5 text-xl sm:text-2xl font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8]"
             style={{ 
               backgroundColor: '#3B74B8',
               color: 'white',
@@ -697,17 +756,17 @@ const PresentationScreen = ({ steps, next, onNavigate, language }) => {
   const DURATION_PER_STEP = 5000; // 5 seconds
 
   const StepVisual = ({ id, language }) => {
-    const visualContainerClasses = "w-full lg:w-2/5 flex items-center justify-center p-4 md:p-8 min-h-[250px] sm:min-h-[350px]";
+    const visualContainerClasses = "w-full lg:w-2/5 flex items-center justify-center p-4 md:p-8 min-h-[300px] sm:min-h-[400px]";
     
     switch (id) {
         case 'why_step1':
             return (
                 <div className={visualContainerClasses}>
-                    <div className="relative w-64 h-64">
+                    <div className="relative w-80 h-80">
                         <div className="absolute top-1/2 left-0 w-full h-0.5 bg-slate-300 rounded-full animate-fade-in" />
-                        <div className="absolute top-1/2 left-1/2 w-32 h-32 border-2 border-slate-300 rounded-full -translate-x-1/2 -translate-y-1/2 animate-fade-in" style={{animationDelay: '100ms'}} />
-                        <div className="absolute top-1/4 left-1/4 w-16 h-16 bg-sky-200/50 rounded-full animate-fade-in" style={{animationDelay: '200ms'}}/>
-                        <div className="absolute bottom-1/4 right-1/4 w-12 h-12 bg-red-200/50 rounded-full animate-fade-in" style={{animationDelay: '300ms'}} />
+                        <div className="absolute top-1/2 left-1/2 w-40 h-40 border-2 border-slate-300 rounded-full -translate-x-1/2 -translate-y-1/2 animate-fade-in" style={{animationDelay: '100ms'}} />
+                        <div className="absolute top-1/4 left-1/4 w-20 h-20 bg-sky-200/50 rounded-full animate-fade-in" style={{animationDelay: '200ms'}}/>
+                        <div className="absolute bottom-1/4 right-1/4 w-16 h-16 bg-red-200/50 rounded-full animate-fade-in" style={{animationDelay: '300ms'}} />
                     </div>
                 </div>
             );
@@ -716,53 +775,53 @@ const PresentationScreen = ({ steps, next, onNavigate, language }) => {
                 <div className={visualContainerClasses}>
                     <div className="text-center p-6 rounded-lg bg-red-50/50 border border-red-200/50 shadow-inner">
                         <div className="text-9xl font-bold" style={{color: '#D0342C'}}>80%</div>
-                        <p className="text-xl text-slate-600 mt-2 max-w-xs">{language === 'Italiano' ? 'delle aziende si affida a processi manuali' : 'of companies rely on manual processes'}</p>
+                        <p className="text-2xl text-slate-600 mt-2 max-w-xs">{language === 'Italiano' ? 'delle aziende si affida a processi manuali' : 'of companies rely on manual processes'}</p>
                     </div>
                 </div>
             );
         case 'why_step3':
             return (
                  <div className={`${visualContainerClasses} perspective-1000`}>
-                    <div className="relative w-64 h-32 transform-style-3d rotate-x-10 -rotate-y-20">
+                    <div className="relative w-80 h-40 transform-style-3d rotate-x-10 -rotate-y-20">
                         {[...Array(8)].map((_, i) => (
                             <div 
                                 key={i} 
-                                className="absolute w-full h-24 bg-white border border-slate-300 rounded-md shadow-md"
+                                className="absolute w-full h-32 bg-white border border-slate-300 rounded-md shadow-md"
                                 style={{ 
-                                    transform: `translateZ(-${i * 4}px) translateY(${i * 4}px)`,
+                                    transform: `translateZ(-${i * 5}px) translateY(${i * 5}px)`,
                                     opacity: 1 - i * 0.1,
                                 }}
                             ></div>
                         ))}
-                        <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-lg font-semibold text-slate-600 italic">"Sommerso di scartoffie!"</p>
+                        <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-xl font-semibold text-slate-600 italic">"Sommerso di scartoffie!"</p>
                     </div>
                 </div>
             );
         case 'why_step4':
              return (
-                <div className={`${visualContainerClasses} flex-col sm:flex-row gap-8`}>
-                    <div className="text-center p-6 rounded-lg bg-slate-50 border shadow-inner">
-                        <div className="text-7xl font-bold" style={{color: '#D0342C'}}>+60%</div>
-                        <p className="text-xl text-slate-600 mt-2">{language === 'Italiano' ? 'Costi' : 'Costs'}</p>
+                <div className={`${visualContainerClasses} flex-col sm:flex-row gap-10`}>
+                    <div className="text-center p-8 rounded-lg bg-slate-50 border shadow-inner">
+                        <div className="text-8xl font-bold" style={{color: '#D0342C'}}>+60%</div>
+                        <p className="text-2xl text-slate-600 mt-2">{language === 'Italiano' ? 'Costi' : 'Costs'}</p>
                     </div>
-                    <div className="text-center p-6 rounded-lg bg-slate-50 border shadow-inner">
-                        <div className="text-7xl font-bold" style={{color: '#D0342C'}}>-20%</div>
-                        <p className="text-xl text-slate-600 mt-2">ROI</p>
+                    <div className="text-center p-8 rounded-lg bg-slate-50 border shadow-inner">
+                        <div className="text-8xl font-bold" style={{color: '#D0342C'}}>-20%</div>
+                        <p className="text-2xl text-slate-600 mt-2">ROI</p>
                     </div>
                 </div>
             );
         case 'step1': // Manual Upload
             return (
                 <div className={visualContainerClasses}>
-                   <div className="flex items-center gap-4">
-                       <div className="w-24 h-32 bg-white border-2 border-slate-300 rounded-md p-2 flex flex-col gap-2">
-                            <div className="w-full h-2 bg-slate-200 rounded-sm"></div>
-                            <div className="w-5/6 h-2 bg-slate-200 rounded-sm"></div>
-                            <div className="w-full h-2 bg-slate-200 rounded-sm"></div>
-                            <div className="w-2/3 h-2 bg-slate-200 rounded-sm"></div>
+                   <div className="flex items-center gap-6">
+                       <div className="w-32 h-40 bg-white border-2 border-slate-300 rounded-md p-3 flex flex-col gap-3">
+                            <div className="w-full h-2.5 bg-slate-200 rounded-sm"></div>
+                            <div className="w-5/6 h-2.5 bg-slate-200 rounded-sm"></div>
+                            <div className="w-full h-2.5 bg-slate-200 rounded-sm"></div>
+                            <div className="w-2/3 h-2.5 bg-slate-200 rounded-sm"></div>
                        </div>
-                       <div className="text-5xl font-light text-slate-400">→</div>
-                       <div className="w-40 h-24 bg-sky-100 border-2 border-dashed border-sky-400 rounded-lg flex items-center justify-center text-sky-600 font-bold text-lg">
+                       <div className="text-7xl font-light text-slate-400">→</div>
+                       <div className="w-48 h-32 bg-sky-100 border-2 border-dashed border-sky-400 rounded-lg flex items-center justify-center text-sky-600 font-bold text-2xl">
                            Celerya
                        </div>
                    </div>
@@ -771,14 +830,14 @@ const PresentationScreen = ({ steps, next, onNavigate, language }) => {
         case 'step2': // Shared Folders
             return (
                 <div className={visualContainerClasses}>
-                   <div className="flex items-center gap-6">
-                        <div className="relative w-32 h-24">
-                            <div className="absolute -bottom-2 -right-2 w-24 h-20 bg-blue-300/80 rounded-full"></div>
-                            <div className="absolute -bottom-1 -left-4 w-20 h-16 bg-blue-300/80 rounded-full"></div>
+                   <div className="flex items-center gap-8">
+                        <div className="relative w-40 h-32">
+                            <div className="absolute -bottom-2 -right-2 w-28 h-24 bg-blue-300/80 rounded-full"></div>
+                            <div className="absolute -bottom-1 -left-4 w-24 h-20 bg-blue-300/80 rounded-full"></div>
                             <div className="absolute w-full h-full bg-blue-400/80 rounded-full z-10"></div>
                         </div>
-                       <div className="text-5xl font-light text-slate-400">→</div>
-                       <div className="w-40 h-24 bg-sky-100 border-2 border-sky-400 rounded-lg flex items-center justify-center text-sky-600 font-bold text-lg">
+                       <div className="text-7xl font-light text-slate-400">→</div>
+                       <div className="w-48 h-32 bg-sky-100 border-2 border-sky-400 rounded-lg flex items-center justify-center text-sky-600 font-bold text-2xl">
                            Celerya
                        </div>
                    </div>
@@ -787,13 +846,13 @@ const PresentationScreen = ({ steps, next, onNavigate, language }) => {
         case 'step3': // System Integration
             return (
                  <div className={visualContainerClasses}>
-                   <div className="flex items-center gap-2">
-                       <div className="w-32 h-20 bg-slate-200 rounded-lg flex items-center justify-center text-slate-600 font-semibold p-2 text-center">Your System</div>
-                       <div className="w-16 h-1 bg-slate-400 relative">
-                            <div className="absolute w-2 h-2 rounded-full bg-slate-500 top-1/2 -translate-y-1/2 left-0 animate-ping"></div>
-                            <div className="absolute w-2 h-2 rounded-full bg-slate-500 top-1/2 -translate-y-1/2 right-0 animate-ping" style={{animationDelay: '0.5s'}}></div>
+                   <div className="flex items-center gap-3">
+                       <div className="w-40 h-28 bg-slate-200 rounded-lg flex items-center justify-center text-slate-600 font-semibold p-3 text-center text-lg">Your System</div>
+                       <div className="w-20 h-1.5 bg-slate-400 relative">
+                            <div className="absolute w-2.5 h-2.5 rounded-full bg-slate-500 top-1/2 -translate-y-1/2 left-0 animate-ping"></div>
+                            <div className="absolute w-2.5 h-2.5 rounded-full bg-slate-500 top-1/2 -translate-y-1/2 right-0 animate-ping" style={{animationDelay: '0.5s'}}></div>
                        </div>
-                       <div className="w-32 h-20 bg-sky-100 border-2 border-sky-400 rounded-lg flex items-center justify-center text-sky-600 font-bold text-lg p-2 text-center">
+                       <div className="w-40 h-28 bg-sky-100 border-2 border-sky-400 rounded-lg flex items-center justify-center text-sky-600 font-bold text-2xl p-3 text-center">
                            Celerya
                        </div>
                    </div>
@@ -802,19 +861,19 @@ const PresentationScreen = ({ steps, next, onNavigate, language }) => {
         case 'dashboard_step': // Dashboard
             return (
                 <div className={visualContainerClasses}>
-                    <div className="w-80 h-56 bg-white rounded-lg p-4 shadow-lg border border-slate-200 grid grid-cols-2 gap-3">
-                        <div className="bg-sky-200 rounded p-2 text-xs text-sky-800 flex flex-col justify-between">
+                    <div className="w-96 h-64 bg-white rounded-lg p-5 shadow-lg border border-slate-200 grid grid-cols-2 gap-4">
+                        <div className="bg-sky-200 rounded p-3 text-sm text-sky-800 flex flex-col justify-between">
                             <span className="font-bold">Sales</span>
-                            <div className="w-full h-8 bg-sky-300/50 rounded mt-1"></div>
+                            <div className="w-full h-10 bg-sky-300/50 rounded mt-1"></div>
                         </div>
-                        <div className="bg-green-200 rounded p-2 text-xs text-green-800 flex flex-col items-center justify-center">
-                           <span className="font-bold text-sm">Efficiency</span>
-                           <span className="text-3xl font-bold mt-1">98%</span>
+                        <div className="bg-green-200 rounded p-3 text-sm text-green-800 flex flex-col items-center justify-center">
+                           <span className="font-bold text-lg">Efficiency</span>
+                           <span className="text-4xl font-bold mt-1">98%</span>
                         </div>
-                        <div className="bg-yellow-100 rounded p-2 col-span-2 text-xs text-yellow-800">
+                        <div className="bg-yellow-100 rounded p-3 col-span-2 text-sm text-yellow-800">
                             <span className="font-bold">Activity Log</span>
-                            <div className="w-full h-1 bg-yellow-300/50 rounded-sm mt-2"></div>
-                            <div className="w-3/4 h-1 bg-yellow-300/50 rounded-sm mt-1"></div>
+                            <div className="w-full h-1.5 bg-yellow-300/50 rounded-sm mt-2.5"></div>
+                            <div className="w-3/4 h-1.5 bg-yellow-300/50 rounded-sm mt-1.5"></div>
                         </div>
                     </div>
                 </div>
@@ -874,9 +933,9 @@ const PresentationScreen = ({ steps, next, onNavigate, language }) => {
   return (
     <div className="flex flex-col justify-center items-center p-4 w-full min-h-[calc(100vh-100px)]">
       {/* Progress Bars */}
-      <div className="flex gap-2.5 mb-8 sm:mb-12 w-full max-w-2xl">
+      <div className="flex gap-2.5 mb-10 sm:mb-16 w-full max-w-2xl">
         {steps.map((_, index) => (
-          <div key={index} className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+          <div key={index} className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
             {index < activeIndex && <div className="bg-[#3B74B8] h-full rounded-full w-full"></div>}
             {index === activeIndex && 
               <div 
@@ -896,8 +955,8 @@ const PresentationScreen = ({ steps, next, onNavigate, language }) => {
       <div key={activeIndex} className="flex flex-col-reverse lg:flex-row items-center justify-center animate-slide-up-fade w-full max-w-6xl mx-auto flex-grow">
         {/* Text Content */}
         <div className="w-full lg:w-3/5 text-center lg:text-left p-4 md:p-8">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-slate-800 mb-6">{title}</h2>
-            <p className="text-lg sm:text-xl md:text-2xl text-slate-600 max-w-2xl mx-auto lg:mx-0">{description}</p>
+            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-slate-800 mb-8">{title}</h2>
+            <p className="text-xl sm:text-2xl md:text-3xl text-slate-600 max-w-2xl mx-auto lg:mx-0">{description}</p>
         </div>
         
         {/* Visual Content */}
@@ -905,28 +964,28 @@ const PresentationScreen = ({ steps, next, onNavigate, language }) => {
       </div>
 
       {/* Navigation Controls */}
-      <div className="flex items-center justify-center gap-6 sm:gap-8 mt-8 sm:mt-12 text-slate-500">
+      <div className="flex items-center justify-center gap-8 sm:gap-10 mt-10 sm:mt-16 text-slate-500">
         <button 
           onClick={handlePrevClick} 
           disabled={activeIndex === 0} 
           className="p-2 rounded-full hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           aria-label="Previous step"
         >
-          <ChevronLeftIcon className="h-7 w-7" />
+          <ChevronLeftIcon className="h-9 w-9" />
         </button>
         <button 
           onClick={togglePlayPause} 
           className="p-3 rounded-full hover:bg-slate-200/70 transition-colors bg-white shadow-lg"
           aria-label={isPaused ? 'Play' : 'Pause'}
         >
-            {isPaused ? <PlayIcon className="h-9 w-9 text-[#3B74B8] -mr-1" /> : <PauseIcon className="h-9 w-9 text-[#3B74B8]" />}
+            {isPaused ? <PlayIcon className="h-12 w-12 text-[#3B74B8] -mr-1" /> : <PauseIcon className="h-12 w-12 text-[#3B74B8]" />}
         </button>
         <button 
           onClick={handleNextClick} 
           className="p-2 rounded-full hover:bg-slate-100 transition-colors"
           aria-label="Next step"
         >
-          <ChevronRightIcon className="h-7 w-7" />
+          <ChevronRightIcon className="h-9 w-9" />
         </button>
       </div>
     </div>
@@ -948,16 +1007,16 @@ const PricingScreen = ({ text, scenarios, sydAgent, dataProducer, actions, onNav
   return (
     <div className="flex flex-col w-full p-4 animate-fade-in">
       <div className="text-center mb-12 sm:mb-16">
-        <h1 className="text-5xl sm:text-7xl md:text-8xl font-bold" style={{ color: '#2D5F9D' }}>
+        <h1 className="text-6xl sm:text-8xl md:text-9xl font-bold" style={{ color: '#2D5F9D' }}>
           {title}
         </h1>
-        {subtitle && <p className="text-xl sm:text-3xl md:text-4xl text-slate-600 mt-5">{subtitle}</p>}
+        {subtitle && <p className="text-2xl sm:text-4xl md:text-5xl text-slate-600 mt-5">{subtitle}</p>}
       </div>
 
       {/* DATA SUBSCRIBER SECTION */}
       <div className="animate-fade-in">
         <div className="text-center mb-8">
-            <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold" style={{ color: '#2D5F9D' }}>
+            <h2 className="text-5xl sm:text-6xl md:text-7xl font-bold" style={{ color: '#2D5F9D' }}>
               DATA SUBSCRIBER
             </h2>
         </div>
@@ -966,7 +1025,7 @@ const PricingScreen = ({ text, scenarios, sydAgent, dataProducer, actions, onNav
             <button
                 key={scenario.id}
                 onClick={() => setActiveTab(scenario.id)}
-                className={`px-4 sm:px-6 py-3 text-base sm:text-lg md:text-xl font-semibold transition-colors duration-200 border-b-2 -mb-px flex-shrink-0 ${
+                className={`px-4 sm:px-6 py-4 text-lg sm:text-xl md:text-2xl font-semibold transition-colors duration-200 border-b-2 -mb-px flex-shrink-0 ${
                 activeTab === scenario.id
                     ? 'border-[#3B74B8] text-[#3B74B8]'
                     : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-gray-300'
@@ -981,16 +1040,16 @@ const PricingScreen = ({ text, scenarios, sydAgent, dataProducer, actions, onNav
             {activeScenario && (
             <div key={activeScenario.id} className="animate-fade-in-fast">
                 <h3 className="text-2xl sm:text-4xl font-bold text-slate-800 text-center mb-4">{activeScenario.title[language]}</h3>
-                <p className="text-slate-600 text-center max-w-3xl mx-auto mb-10 text-lg sm:text-xl">{activeScenario.description[language]}</p>
+                <p className="text-slate-600 text-center max-w-3xl mx-auto mb-10 text-lg sm:text-2xl">{activeScenario.description[language]}</p>
                 
                 <div className="border border-gray-200 rounded-lg shadow-md overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead style={{ backgroundColor: '#3B74B8' }}>
                     <tr>
-                        <th scope="col" className="px-4 py-4 md:px-8 md:py-5 text-left text-sm sm:text-base font-bold text-white uppercase tracking-wider">
+                        <th scope="col" className="px-6 py-6 md:px-10 md:py-6 text-left text-base sm:text-lg font-bold text-white uppercase tracking-wider">
                         {language === 'Italiano' ? 'Servizio' : 'Service'}
                         </th>
-                        <th scope="col" className="px-4 py-4 md:px-8 md:py-5 text-left text-sm sm:text-base font-bold text-white uppercase tracking-wider">
+                        <th scope="col" className="px-6 py-6 md:px-10 md:py-6 text-left text-base sm:text-lg font-bold text-white uppercase tracking-wider">
                         {language === 'Italiano' ? 'Costo' : 'Cost'}
                         </th>
                     </tr>
@@ -998,8 +1057,8 @@ const PricingScreen = ({ text, scenarios, sydAgent, dataProducer, actions, onNav
                     <tbody className="bg-white divide-y divide-gray-200">
                     {activeScenario.tiers.map((tier, index) => (
                         <tr key={index} className="odd:bg-white even:bg-slate-50/70">
-                        <td className="px-4 py-4 md:px-8 md:py-5 whitespace-nowrap text-base sm:text-lg font-medium text-slate-800">{tier.service[language]}</td>
-                        <td className="px-4 py-4 md:px-8 md:py-5 whitespace-nowrap text-base sm:text-lg text-slate-600">{tier.cost[language]}</td>
+                        <td className="px-6 py-6 md:px-10 md:py-6 whitespace-nowrap text-lg sm:text-xl font-medium text-slate-800">{tier.service[language]}</td>
+                        <td className="px-6 py-6 md:px-10 md:py-6 whitespace-nowrap text-lg sm:text-xl text-slate-600">{tier.cost[language]}</td>
                         </tr>
                     ))}
                     </tbody>
@@ -1014,14 +1073,14 @@ const PricingScreen = ({ text, scenarios, sydAgent, dataProducer, actions, onNav
       {dataProducer && (
         <div className="mt-16 sm:mt-20 animate-fade-in">
           <div className="text-center mb-12">
-            <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold" style={{ color: '#2D5F9D' }}>
+            <h2 className="text-5xl sm:text-6xl md:text-7xl font-bold" style={{ color: '#2D5F9D' }}>
               {dataProducer.title[language]}
             </h2>
             <p className="text-2xl sm:text-3xl md:text-4xl text-slate-600 mt-5">{dataProducer.subtitle[language]}</p>
           </div>
           
           <div className="max-w-4xl mx-auto px-4 text-left">
-            <div className="space-y-4 text-slate-700 text-lg sm:text-xl mb-10">
+            <div className="space-y-4 text-slate-700 text-lg sm:text-2xl mb-10">
               <p className="font-semibold">{dataProducer.descriptionTitle[language]}</p>
               <div className="pl-6 space-y-4 mt-5">
                 {dataProducer.descriptionPoints.map((point, index) => (
@@ -1031,13 +1090,13 @@ const PricingScreen = ({ text, scenarios, sydAgent, dataProducer, actions, onNav
             </div>
 
             <div className="mb-10">
-                <p className="text-lg sm:text-xl font-semibold text-slate-800">{dataProducer.benefitTitle[language]}</p>
-                <p className="text-xl sm:text-2xl font-bold mt-3" style={{color: '#3B74B8'}}>{dataProducer.benefitDescription[language]}</p>
+                <p className="text-lg sm:text-2xl font-semibold text-slate-800">{dataProducer.benefitTitle[language]}</p>
+                <p className="text-xl sm:text-3xl font-bold mt-3" style={{color: '#3B74B8'}}>{dataProducer.benefitDescription[language]}</p>
             </div>
             
             <ul className="space-y-4">
               {dataProducer.benefitChecklist.map((item, index) => (
-                <li key={index} className="flex items-start text-lg sm:text-xl">
+                <li key={index} className="flex items-start text-lg sm:text-2xl">
                     <CheckCircleIcon className="h-7 w-7 sm:h-8 sm:w-8 text-green-500 mr-3 sm:mr-4 mt-1 flex-shrink-0" />
                     <span className="text-slate-700">{item[language]}</span>
                 </li>
@@ -1051,7 +1110,7 @@ const PricingScreen = ({ text, scenarios, sydAgent, dataProducer, actions, onNav
       {sydAgent && (
         <div className="mt-16 sm:mt-20 animate-fade-in">
             <div className="text-center mb-12">
-                <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold" style={{ color: '#2D5F9D' }}>
+                <h2 className="text-5xl sm:text-6xl md:text-7xl font-bold" style={{ color: '#2D5F9D' }}>
                     {sydAgent.title[language]}
                 </h2>
                 <p className="text-2xl sm:text-3xl md:text-4xl text-slate-600 mt-4">{sydAgent.subtitle[language]}</p>
@@ -1061,21 +1120,21 @@ const PricingScreen = ({ text, scenarios, sydAgent, dataProducer, actions, onNav
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead style={{ backgroundColor: '#3B74B8' }}>
                         <tr>
-                            <th scope="col" className="px-4 py-4 md:px-8 md:py-5 text-left text-sm sm:text-base font-bold text-white uppercase tracking-wider">{language === 'Italiano' ? 'Piano' : 'Plan'}</th>
-                            <th scope="col" className="px-4 py-4 md:px-8 md:py-5 text-left text-sm sm:text-base font-bold text-white uppercase tracking-wider">{language === 'Italiano' ? 'Prezzo Mensile' : 'Monthly Price'}</th>
-                            <th scope="col" className="px-4 py-4 md:px-8 md:py-5 text-left text-sm sm:text-base font-bold text-white uppercase tracking-wider">{language === 'Italiano' ? 'Configurazione' : 'Configuration'}</th>
-                            <th scope="col" className="px-4 py-4 md:px-8 md:py-5 text-left text-sm sm:text-base font-bold text-white uppercase tracking-wider">{language === 'Italiano' ? 'Dimensione Azienda' : 'Company Size'}</th>
-                            <th scope="col" className="px-4 py-4 md:px-8 md:py-5 text-left text-sm sm:text-base font-bold text-white uppercase tracking-wider">{language === 'Italiano' ? 'Cosa Include Subito' : 'What\'s Included'}</th>
+                            <th scope="col" className="px-6 py-6 md:px-10 md:py-6 text-left text-base sm:text-lg font-bold text-white uppercase tracking-wider">{language === 'Italiano' ? 'Piano' : 'Plan'}</th>
+                            <th scope="col" className="px-6 py-6 md:px-10 md:py-6 text-left text-base sm:text-lg font-bold text-white uppercase tracking-wider">{language === 'Italiano' ? 'Prezzo Mensile' : 'Monthly Price'}</th>
+                            <th scope="col" className="px-6 py-6 md:px-10 md:py-6 text-left text-base sm:text-lg font-bold text-white uppercase tracking-wider">{language === 'Italiano' ? 'Configurazione' : 'Configuration'}</th>
+                            <th scope="col" className="px-6 py-6 md:px-10 md:py-6 text-left text-base sm:text-lg font-bold text-white uppercase tracking-wider">{language === 'Italiano' ? 'Dimensione Azienda' : 'Company Size'}</th>
+                            <th scope="col" className="px-6 py-6 md:px-10 md:py-6 text-left text-base sm:text-lg font-bold text-white uppercase tracking-wider">{language === 'Italiano' ? 'Cosa Include Subito' : 'What\'s Included'}</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                         {sydAgent.plans.map((plan, index) => (
                             <tr key={index} className="odd:bg-white even:bg-slate-50/70">
-                                <td className="px-4 py-4 md:px-8 md:py-5 whitespace-nowrap text-base sm:text-lg font-medium text-slate-800">{plan.plan[language]}</td>
-                                <td className="px-4 py-4 md:px-8 md:py-5 whitespace-nowrap text-base sm:text-lg text-slate-600">{plan.price[language]}</td>
-                                <td className="px-4 py-4 md:px-8 md:py-5 whitespace-nowrap text-base sm:text-lg text-slate-600">{plan.configuration[language]}</td>
-                                <td className="px-4 py-4 md:px-8 md:py-5 whitespace-nowrap text-base sm:text-lg text-slate-600">{plan.companySize[language]}</td>
-                                <td className="px-4 py-4 md:px-8 md:py-5 whitespace-normal text-base sm:text-lg text-slate-600">{plan.includes[language]}</td>
+                                <td className="px-6 py-6 md:px-10 md:py-6 whitespace-nowrap text-lg sm:text-xl font-medium text-slate-800">{plan.plan[language]}</td>
+                                <td className="px-6 py-6 md:px-10 md:py-6 whitespace-nowrap text-lg sm:text-xl text-slate-600">{plan.price[language]}</td>
+                                <td className="px-6 py-6 md:px-10 md:py-6 whitespace-nowrap text-lg sm:text-xl text-slate-600">{plan.configuration[language]}</td>
+                                <td className="px-6 py-6 md:px-10 md:py-6 whitespace-nowrap text-lg sm:text-xl text-slate-600">{plan.companySize[language]}</td>
+                                <td className="px-6 py-6 md:px-10 md:py-6 whitespace-normal text-lg sm:text-xl text-slate-600">{plan.includes[language]}</td>
                             </tr>
                         ))}
                     </tbody>
@@ -1089,17 +1148,17 @@ const PricingScreen = ({ text, scenarios, sydAgent, dataProducer, actions, onNav
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead style={{ backgroundColor: '#3B74B8' }}>
                         <tr>
-                            <th scope="col" className="px-4 py-4 md:px-8 md:py-5 text-left text-sm sm:text-base font-bold text-white uppercase tracking-wider">{language === 'Italiano' ? 'Servizio' : 'Service'}</th>
-                            <th scope="col" className="px-4 py-4 md:px-8 md:py-5 text-left text-sm sm:text-base font-bold text-white uppercase tracking-wider">{language === 'Italiano' ? 'Quando Serve' : 'When Needed'}</th>
-                            <th scope="col" className="px-4 py-4 md:px-8 md:py-5 text-left text-sm sm:text-base font-bold text-white uppercase tracking-wider">{language === 'Italiano' ? 'Costo' : 'Cost'}</th>
+                            <th scope="col" className="px-6 py-6 md:px-10 md:py-6 text-left text-base sm:text-lg font-bold text-white uppercase tracking-wider">{language === 'Italiano' ? 'Servizio' : 'Service'}</th>
+                            <th scope="col" className="px-6 py-6 md:px-10 md:py-6 text-left text-base sm:text-lg font-bold text-white uppercase tracking-wider">{language === 'Italiano' ? 'Quando Serve' : 'When Needed'}</th>
+                            <th scope="col" className="px-6 py-6 md:px-10 md:py-6 text-left text-base sm:text-lg font-bold text-white uppercase tracking-wider">{language === 'Italiano' ? 'Costo' : 'Cost'}</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                         {sydAgent.additionalServices.map((service, index) => (
                             <tr key={index} className="odd:bg-white even:bg-slate-50/70">
-                                <td className="px-4 py-4 md:px-8 md:py-5 whitespace-nowrap text-base sm:text-lg font-medium text-slate-800">{service.service[language]}</td>
-                                <td className="px-4 py-4 md:px-8 md:py-5 whitespace-nowrap text-base sm:text-lg text-slate-600">{service.when[language]}</td>
-                                <td className="px-4 py-4 md:px-8 md:py-5 whitespace-nowrap text-base sm:text-lg text-slate-600">{service.cost[language]}</td>
+                                <td className="px-6 py-6 md:px-10 md:py-6 whitespace-nowrap text-lg sm:text-xl font-medium text-slate-800">{service.service[language]}</td>
+                                <td className="px-6 py-6 md:px-10 md:py-6 whitespace-nowrap text-lg sm:text-xl text-slate-600">{service.when[language]}</td>
+                                <td className="px-6 py-6 md:px-10 md:py-6 whitespace-nowrap text-lg sm:text-xl text-slate-600">{service.cost[language]}</td>
                             </tr>
                         ))}
                     </tbody>
@@ -1110,7 +1169,7 @@ const PricingScreen = ({ text, scenarios, sydAgent, dataProducer, actions, onNav
 
       {/* Savings Section */}
       <div className="mt-16 sm:mt-20 animate-fade-in">
-          <div className="max-w-4xl mx-auto bg-sky-50/70 border border-sky-200 rounded-2xl p-6 sm:p-8 shadow-md">
+          <div className="max-w-4xl mx-auto bg-sky-50/70 border border-sky-200 rounded-2xl p-8 sm:p-12 shadow-md">
               <h3 className="text-2xl sm:text-3xl font-bold text-center mb-6" style={{ color: '#2D5F9D' }}>
                   💡 {language === 'Italiano' ? 'Risparmio rispetto all’elaborazione AI' : 'Savings Compared to AI Processing'}
               </h3>
@@ -1120,17 +1179,17 @@ const PricingScreen = ({ text, scenarios, sydAgent, dataProducer, actions, onNav
               <div className="flex flex-col md:flex-row justify-center gap-4 sm:gap-8 text-center">
                   <div className="bg-white p-4 sm:p-6 rounded-lg border border-gray-200 flex-1 shadow-sm">
                       <p className="font-semibold text-slate-700">AI (Scenario 1)</p>
-                      <p className="text-3xl sm:text-4xl font-bold text-slate-800 mt-2">€0,36</p>
+                      <p className="text-4xl sm:text-5xl font-bold text-slate-800 mt-2">€0,36</p>
                       <p className="text-slate-500 text-sm">({language === 'Italiano' ? '0,12 €/pagina' : '€0.12/page'})</p>
                   </div>
                   <div className="bg-white p-4 sm:p-6 rounded-lg border border-gray-200 flex-1 shadow-sm">
                       <p className="font-semibold text-slate-700">API (Scenario 2)</p>
-                      <p className="text-3xl sm:text-4xl font-bold text-slate-800 mt-2">€0,03 – €0,05</p>
+                      <p className="text-4xl sm:text-5xl font-bold text-slate-800 mt-2">€0,03 – €0,05</p>
                       <p className="text-slate-500 text-sm">({language === 'Italiano' ? 'chiamata a dati strutturati' : 'call to structured data'})</p>
                   </div>
               </div>
               <div className="text-center mt-8">
-                  <p className="text-lg sm:text-xl font-semibold text-green-700 bg-green-100/80 inline-block px-4 py-2 rounded-full border border-green-200">
+                  <p className="text-xl sm:text-2xl font-semibold text-green-700 bg-green-100/80 inline-block px-4 py-2 rounded-full border border-green-200">
                       {language === 'Italiano' ? 'Risparmio stimato: ~85–92%' : 'Estimated savings: ~85–92%'}
                   </p>
                   <p className="text-slate-700 mt-5 text-base sm:text-lg font-medium">
@@ -1145,7 +1204,7 @@ const PricingScreen = ({ text, scenarios, sydAgent, dataProducer, actions, onNav
           <button
             key={index}
             onClick={() => handleAction(action)}
-            className="px-8 sm:px-10 py-3 sm:py-4 text-lg sm:text-xl font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8]"
+            className="px-10 sm:px-12 py-4 sm:py-5 text-xl sm:text-2xl font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8]"
             style={{ 
               backgroundColor: '#3B74B8',
               color: 'white',
@@ -1172,23 +1231,23 @@ const EcosystemScreen = ({ ecosystem, language, actions, onNavigate }) => {
 
   return (
     <div className="w-full mx-auto p-4 sm:p-6 animate-fade-in">
-      <h1 className="text-5xl sm:text-7xl md:text-8xl font-bold text-center mb-8" style={{ color: '#2D5F9D' }}>
+      <h1 className="text-6xl sm:text-8xl md:text-9xl font-bold text-center mb-8" style={{ color: '#2D5F9D' }}>
         {ecosystem.title[language]}
       </h1>
       <p 
-        className="text-center text-slate-600 max-w-5xl mx-auto text-lg sm:text-2xl mb-16"
+        className="text-center text-slate-600 max-w-5xl mx-auto text-xl sm:text-3xl mb-16"
         dangerouslySetInnerHTML={{ __html: ecosystem.subtitle[language] }}
       />
 
       {/* SYD Data Gateway Section */}
       <div className="border border-blue-300 rounded-2xl p-4 sm:p-6 md:p-8 relative mb-12 shadow-lg bg-white">
-        <h2 className="absolute -top-6 left-1/2 -translate-x-1/2 bg-white px-4 text-xl sm:text-2xl font-semibold border border-blue-300 rounded-lg" style={{color: '#3B74B8'}}>
+        <h2 className="absolute -top-6 left-1/2 -translate-x-1/2 bg-white px-4 text-xl sm:text-3xl font-semibold border border-blue-300 rounded-lg" style={{color: '#3B74B8'}}>
           {ecosystem.gatewayTitle[language]}
         </h2>
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-8">
           {/* Data Producer */}
           <div className="text-center p-4 py-6 sm:py-8 border-2 border-blue-400 rounded-xl shadow-md bg-white w-full md:flex-1">
-            <h3 className="text-xl sm:text-2xl font-semibold" style={{color: '#2D5F9D'}}>{ecosystem.gatewayProducer[language]}</h3>
+            <h3 className="text-xl sm:text-3xl font-semibold" style={{color: '#2D5F9D'}}>{ecosystem.gatewayProducer[language]}</h3>
           </div>
           
           {/* Connector */}
@@ -1196,8 +1255,8 @@ const EcosystemScreen = ({ ecosystem, language, actions, onNavigate }) => {
              <div className="w-px h-8 md:w-12 md:h-px bg-blue-400"></div>
              <div className="mx-8 my-4 p-6 sm:p-8 border-2 border-blue-400 rounded-lg shadow-md bg-white" style={{ clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)'}}>
                  <div className="text-center leading-tight">
-                     <p className="font-bold text-lg sm:text-xl" style={{color: '#2D5F9D'}}>CELERYA</p>
-                     <p className="font-semibold text-base sm:text-lg" style={{color: '#2D5F9D'}}>SYD</p>
+                     <p className="font-bold text-lg sm:text-2xl" style={{color: '#2D5F9D'}}>CELERYA</p>
+                     <p className="font-semibold text-base sm:text-xl" style={{color: '#2D5F9D'}}>SYD</p>
                  </div>
              </div>
              <div className="w-px h-8 md:w-12 md:h-px bg-blue-400"></div>
@@ -1205,7 +1264,7 @@ const EcosystemScreen = ({ ecosystem, language, actions, onNavigate }) => {
           
           {/* Data User */}
           <div className="text-center p-4 py-6 sm:py-8 border-2 border-blue-400 rounded-xl shadow-md bg-white w-full md:flex-1">
-            <h3 className="text-xl sm:text-2xl font-semibold" style={{color: '#2D5F9D'}}>{ecosystem.gatewayUser[language]}</h3>
+            <h3 className="text-xl sm:text-3xl font-semibold" style={{color: '#2D5F9D'}}>{ecosystem.gatewayUser[language]}</h3>
           </div>
         </div>
       </div>
@@ -1214,7 +1273,7 @@ const EcosystemScreen = ({ ecosystem, language, actions, onNavigate }) => {
 
       {/* Additional/3rd Parties Services Section */}
       <div className="bg-slate-100/70 rounded-2xl p-4 sm:p-6 md:p-8 relative shadow-lg">
-         <h2 className="absolute -top-6 left-1/2 -translate-x-1/2 bg-white px-4 text-xl sm:text-2xl font-semibold border-2 border-black rounded-lg text-slate-800 text-center">
+         <h2 className="absolute -top-6 left-1/2 -translate-x-1/2 bg-white px-4 text-xl sm:text-3xl font-semibold border-2 border-black rounded-lg text-slate-800 text-center">
           {ecosystem.servicesTitle[language]}
         </h2>
         <div className="relative pt-8">
@@ -1224,10 +1283,10 @@ const EcosystemScreen = ({ ecosystem, language, actions, onNavigate }) => {
                     <div key={index} className="flex flex-col items-center flex-1 min-w-[200px] z-10">
                         <div className="w-1.5 h-8 bg-black"></div>
                         <div className="w-full text-center p-4 rounded-xl shadow-lg" style={{backgroundColor: '#086972'}}>
-                            <h3 className="text-xl sm:text-2xl font-bold text-white">{service.title[language]}</h3>
+                            <h3 className="text-xl sm:text-3xl font-bold text-white">{service.title[language]}</h3>
                         </div>
                         <p 
-                            className="mt-6 text-slate-700 text-center text-base sm:text-lg"
+                            className="mt-6 text-slate-700 text-center text-base sm:text-xl"
                             dangerouslySetInnerHTML={{ __html: service.description[language] }}
                         />
                     </div>
@@ -1242,7 +1301,7 @@ const EcosystemScreen = ({ ecosystem, language, actions, onNavigate }) => {
           <button
             key={index}
             onClick={() => handleAction(action)}
-            className="px-8 sm:px-10 py-3 sm:py-4 text-lg sm:text-xl font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8]"
+            className="px-8 sm:px-10 py-3 sm:py-4 text-lg sm:text-2xl font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8]"
             style={{ 
               backgroundColor: '#3B74B8',
               color: 'white',
@@ -1256,7 +1315,7 @@ const EcosystemScreen = ({ ecosystem, language, actions, onNavigate }) => {
           href="https://syd.celerya.com/login"
           target="_blank"
           rel="noopener noreferrer"
-          className="px-8 sm:px-10 py-3 sm:py-4 text-lg sm:text-xl font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8] text-center w-full sm:w-auto"
+          className="px-8 sm:px-10 py-3 sm:py-4 text-lg sm:text-2xl font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8] text-center w-full sm:w-auto"
           style={{ 
             backgroundColor: '#3B74B8',
             color: 'white',
@@ -1269,7 +1328,7 @@ const EcosystemScreen = ({ ecosystem, language, actions, onNavigate }) => {
           href="https://aistudio.google.com/app/apps/drive/1JTKm_Xu_sI1NQ0kSyFOIP9pqAFH4WGWP?showPreview=true&showCode=true&showAssistant=true"
           target="_blank"
           rel="noopener noreferrer"
-          className="px-8 sm:px-10 py-3 sm:py-4 text-lg sm:text-xl font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8] text-center w-full sm:w-auto"
+          className="px-8 sm:px-10 py-3 sm:py-4 text-lg sm:text-2xl font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8] text-center w-full sm:w-auto"
           style={{ 
             backgroundColor: '#3B74B8',
             color: 'white',
@@ -1282,7 +1341,7 @@ const EcosystemScreen = ({ ecosystem, language, actions, onNavigate }) => {
           href="https://celeryacom.sharepoint.com/:p:/s/SviluppoCommerciale/EduVN_DwXchJukLVTfxWbzQBZ48Pd4S1Os0W-DSz-8r3LQ?e=iskHch"
           target="_blank"
           rel="noopener noreferrer"
-          className="px-8 sm:px-10 py-3 sm:py-4 text-lg sm:text-xl font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8] text-center w-full sm:w-auto"
+          className="px-8 sm:px-10 py-3 sm:py-4 text-lg sm:text-2xl font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8] text-center w-full sm:w-auto"
           style={{ 
             backgroundColor: '#3B74B8',
             color: 'white',
@@ -1295,7 +1354,7 @@ const EcosystemScreen = ({ ecosystem, language, actions, onNavigate }) => {
           href="https://chatgpt.com/g/g-rgbSRHU8u-celerya-cvo"
           target="_blank"
           rel="noopener noreferrer"
-          className="px-8 sm:px-10 py-3 sm:py-4 text-lg sm:text-xl font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8] text-center w-full sm:w-auto"
+          className="px-8 sm:px-10 py-3 sm:py-4 text-lg sm:text-2xl font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8] text-center w-full sm:w-auto"
           style={{ 
             backgroundColor: '#3B74B8',
             color: 'white',
@@ -1321,17 +1380,17 @@ const ApplicationsScreen = ({ text, links, actions, onNavigate, language }) => {
 
   return (
     <div className="text-center flex flex-col items-center justify-center min-h-[400px] p-4 animate-fade-in">
-      <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold mb-6" style={{ color: '#2D5F9D' }}>{title}</h1>
-      <p className="text-lg sm:text-xl md:text-2xl text-slate-600 mb-12 max-w-lg">{subtitle || ''}</p>
+      <h1 className="text-5xl sm:text-7xl md:text-8xl font-bold mb-6" style={{ color: '#2D5F9D' }}>{title}</h1>
+      <p className="text-xl sm:text-2xl md:text-3xl text-slate-600 mb-12 max-w-lg">{subtitle || ''}</p>
 
-      <div className="flex flex-col items-center justify-center gap-6 w-full max-w-xs sm:max-w-sm">
+      <div className="flex flex-col items-center justify-center gap-8 w-full max-w-sm sm:max-w-md">
         {links.map((link) => (
           <a 
             key={link.href}
             href={link.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full flex items-center justify-center px-8 sm:px-10 py-4 sm:py-5 text-white font-bold text-xl sm:text-2xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8]"
+            className="w-full flex items-center justify-center px-8 sm:px-10 py-5 sm:py-6 text-white font-bold text-2xl sm:text-3xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8]"
             style={{ 
               backgroundColor: '#3B74B8', 
               boxShadow: '0 10px 15px -3px rgba(59, 116, 184, 0.3), 0 4px 6px -2px rgba(59, 116, 184, 0.2)',
@@ -1347,7 +1406,7 @@ const ApplicationsScreen = ({ text, links, actions, onNavigate, language }) => {
           <button
             key={index}
             onClick={() => handleAction(action)}
-            className="px-8 py-3 text-slate-600 font-semibold rounded-full hover:bg-gray-200/80 transition-colors duration-200 text-lg"
+            className="px-10 py-4 text-slate-600 font-semibold rounded-full hover:bg-gray-200/80 transition-colors duration-200 text-xl"
           >
             {action.label[language]}
           </button>
@@ -1356,26 +1415,6 @@ const ApplicationsScreen = ({ text, links, actions, onNavigate, language }) => {
     </div>
   );
 };
-
-const TASKS_STORAGE_KEY = 'celerya-tasks';
-
-const getTasks = () => {
-    try {
-        const storedTasks = localStorage.getItem(TASKS_STORAGE_KEY);
-        return storedTasks ? JSON.parse(storedTasks) : [];
-    } catch (error) {
-        console.error("Failed to load tasks from localStorage", error);
-        return [];
-    }
-}
-
-const saveTasks = (tasks) => {
-     try {
-        localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
-    } catch (error) {
-        console.error("Failed to save tasks to localStorage", error);
-    }
-}
 
 // --- Componente per la schermata Agenda ---
 const AgendaScreen = ({ text, actions, onNavigate, language }) => {
@@ -1388,19 +1427,9 @@ const AgendaScreen = ({ text, actions, onNavigate, language }) => {
     const [aiSuggestions, setAiSuggestions] = useState({ visible: false, tasks: [], loading: false, error: '' });
 
     const textareaRef = useRef(null);
-    const NOTES_STORAGE_KEY = 'celerya-agenda-notes';
 
     useEffect(() => {
-        try {
-            const storedNotes = localStorage.getItem(NOTES_STORAGE_KEY);
-            if (storedNotes) {
-                const parsedNotes = JSON.parse(storedNotes);
-                setNotes(parsedNotes);
-            }
-        } catch (error) {
-            console.error("Failed to load notes from localStorage", error);
-            setNotes([]);
-        }
+        setNotes(getNotes());
     }, []);
     
     // Hide popover on click outside
@@ -1573,8 +1602,8 @@ const AgendaScreen = ({ text, actions, onNavigate, language }) => {
     return (
         <div className="flex flex-col w-full animate-fade-in max-w-7xl mx-auto">
              <div className="text-center mb-8 sm:mb-12">
-                <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold" style={{ color: '#2D5F9D' }}>{text.split('\n')[0]}</h1>
-                <p className="text-lg sm:text-xl md:text-2xl text-slate-600 mt-4">{text.split('\n')[1] || ''}</p>
+                <h1 className="text-5xl sm:text-7xl md:text-8xl font-bold" style={{ color: '#2D5F9D' }}>{text.split('\n')[0]}</h1>
+                <p className="text-xl sm:text-2xl md:text-3xl text-slate-600 mt-4">{text.split('\n')[1] || ''}</p>
              </div>
              {selectionPopover && (
                 <div 
@@ -1586,21 +1615,21 @@ const AgendaScreen = ({ text, actions, onNavigate, language }) => {
                     </button>
                 </div>
             )}
-             <div className="flex flex-col md:flex-row gap-4 sm:gap-8 w-full h-[70vh] sm:h-[65vh] md:h-[60vh] min-h-[500px] bg-white rounded-2xl shadow-xl border border-slate-200/80 p-4">
+             <div className="flex flex-col md:flex-row gap-4 sm:gap-8 w-full h-[75vh] min-h-[650px] bg-white rounded-2xl shadow-xl border border-slate-200/80 p-4">
                 <div className={`w-full md:w-1/3 flex-col border-r-0 md:border-r border-slate-200 md:pr-4 ${activeNoteId ? 'hidden md:flex' : 'flex'}`}>
-                    <button onClick={handleNewNote} className="w-full text-center px-4 py-3 mb-4 text-white font-semibold rounded-lg shadow-md transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B74B8]" style={{ backgroundColor: '#3B74B8' }}>
+                    <button onClick={handleNewNote} className="w-full text-center px-4 py-4 mb-4 text-white font-semibold rounded-lg shadow-md transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B74B8] text-xl" style={{ backgroundColor: '#3B74B8' }}>
                         + {language === 'Italiano' ? 'Nuovo Appunto' : 'New Note'}
                     </button>
                     <div className="overflow-y-auto flex-grow">
                         {sortedNotes.length === 0 ? (
                             <div className="flex flex-col items-center justify-center h-full text-center text-slate-400 p-4">
-                                <PencilIcon className="h-16 w-16 mb-4" />
-                                <p className="font-semibold">{language === 'Italiano' ? 'Nessun appunto.' : 'No notes yet.'}</p>
+                                <PencilIcon className="h-20 w-20 mb-4" />
+                                <p className="font-semibold text-xl">{language === 'Italiano' ? 'Nessun appunto.' : 'No notes yet.'}</p>
                             </div>
                         ) : sortedNotes.map(note => (
-                            <div key={note.id} onClick={() => handleSelectNote(note)} className={`p-3 rounded-lg mb-2 cursor-pointer transition-colors ${activeNoteId === note.id ? 'bg-sky-100' : 'hover:bg-slate-100'}`}>
-                                <p className="font-bold text-slate-800 truncate">{note.title || (language === 'Italiano' ? 'Senza Titolo' : 'Untitled')}</p>
-                                <p className="text-sm text-slate-500">{new Date(note.date).toLocaleDateString(language === 'Italiano' ? 'it-IT' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                            <div key={note.id} onClick={() => handleSelectNote(note)} className={`p-4 rounded-lg mb-2 cursor-pointer transition-colors ${activeNoteId === note.id ? 'bg-sky-100' : 'hover:bg-slate-100'}`}>
+                                <p className="font-bold text-slate-800 truncate text-lg">{note.title || (language === 'Italiano' ? 'Senza Titolo' : 'Untitled')}</p>
+                                <p className="text-base text-slate-500">{new Date(note.date).toLocaleDateString(language === 'Italiano' ? 'it-IT' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                             </div>
                         ))}
                     </div>
@@ -1611,29 +1640,29 @@ const AgendaScreen = ({ text, actions, onNavigate, language }) => {
                         <>
                            <div className="flex-shrink-0 mb-4">
                                 <button onClick={() => setActiveNoteId(null)} className="md:hidden flex items-center gap-2 text-slate-600 font-semibold mb-3 p-1 -ml-1">
-                                    <ChevronLeftIcon className="h-5 w-5" /><span>{language === 'Italiano' ? 'Tutti gli appunti' : 'All notes'}</span>
+                                    <ChevronLeftIcon className="h-6 w-6" /><span>{language === 'Italiano' ? 'Tutti gli appunti' : 'All notes'}</span>
                                 </button>
                                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-center">
-                                    <input type="date" value={currentDate} onChange={(e) => setCurrentDate(e.target.value)} className="flex-shrink-0 w-full sm:w-auto p-2 border bg-white text-slate-800 border-slate-300 rounded-lg focus:ring-2 focus:ring-[#3B74B8] focus:outline-none" />
-                                    <input type="text" placeholder={language === 'Italiano' ? 'Titolo...' : 'Title...'} value={currentTitle} onChange={(e) => setCurrentTitle(e.target.value)} className="w-full p-2 border bg-white text-slate-800 border-slate-300 rounded-lg focus:ring-2 focus:ring-[#3B74B8] focus:outline-none text-xl font-semibold"/>
+                                    <input type="date" value={currentDate} onChange={(e) => setCurrentDate(e.target.value)} className="flex-shrink-0 w-full sm:w-auto p-3 border bg-white text-slate-800 border-slate-300 rounded-lg focus:ring-2 focus:ring-[#3B74B8] focus:outline-none text-lg" />
+                                    <input type="text" placeholder={language === 'Italiano' ? 'Titolo...' : 'Title...'} value={currentTitle} onChange={(e) => setCurrentTitle(e.target.value)} className="w-full p-3 border bg-white text-slate-800 border-slate-300 rounded-lg focus:ring-2 focus:ring-[#3B74B8] focus:outline-none text-2xl font-semibold"/>
                                     <div className="flex items-center self-end sm:self-center gap-2">
-                                        <button onClick={handleExtractActions} className="p-2 rounded-full hover:bg-yellow-100 text-yellow-500 transition-colors" title={language === 'Italiano' ? 'Estrai Azioni (AI)' : 'Extract Actions (AI)'}><SparklesIcon className="h-6 w-6" /></button>
-                                        <button onClick={handleDeleteNote} className="p-2 rounded-full hover:bg-red-100 text-red-500 transition-colors"><TrashIcon className="h-6 w-6" /></button>
+                                        <button onClick={handleExtractActions} className="p-3 rounded-full hover:bg-yellow-100 text-yellow-500 transition-colors" title={language === 'Italiano' ? 'Estrai Azioni (AI)' : 'Extract Actions (AI)'}><SparklesIcon className="h-7 w-7" /></button>
+                                        <button onClick={handleDeleteNote} className="p-3 rounded-full hover:bg-red-100 text-red-500 transition-colors"><TrashIcon className="h-7 w-7" /></button>
                                     </div>
                                 </div>
                             </div>
-                            <textarea ref={textareaRef} onMouseUp={handleMouseUp} value={currentContent} onChange={(e) => setCurrentContent(e.target.value)} placeholder={language === 'Italiano' ? 'Scrivi qui...' : 'Write here...'} className="w-full h-full p-3 border bg-white text-slate-800 border-slate-300 rounded-lg flex-grow resize-none focus:ring-2 focus:ring-[#3B74B8] focus:outline-none text-lg leading-relaxed"></textarea>
+                            <textarea ref={textareaRef} onMouseUp={handleMouseUp} value={currentContent} onChange={(e) => setCurrentContent(e.target.value)} placeholder={language === 'Italiano' ? 'Scrivi qui...' : 'Write here...'} className="w-full h-full p-4 border bg-white text-slate-800 border-slate-300 rounded-lg flex-grow resize-none focus:ring-2 focus:ring-[#3B74B8] focus:outline-none text-xl leading-relaxed"></textarea>
                         </>
                     ) : (
                        <div className="flex flex-col items-center justify-center h-full text-center text-slate-500">
-                            <PencilIcon className="h-24 w-24 text-slate-300 mb-4" />
-                            <p className="text-2xl font-semibold">{language === 'Italiano' ? 'Seleziona un appunto' : 'Select a note'}</p>
+                            <PencilIcon className="h-28 w-28 text-slate-300 mb-4" />
+                            <p className="text-3xl font-semibold">{language === 'Italiano' ? 'Seleziona un appunto' : 'Select a note'}</p>
                        </div>
                     )}
                 </div>
              </div>
              <div className="flex items-center justify-center gap-4 mt-8">
-                {actions.map((action, index) => <button key={index} onClick={() => onNavigate(action.target)} className="px-8 py-3 text-slate-600 font-semibold rounded-full hover:bg-gray-200/80 transition-colors text-lg">{action.label[language]}</button>)}
+                {actions.map((action, index) => <button key={index} onClick={() => onNavigate(action.target)} className="px-10 py-4 text-slate-600 font-semibold rounded-full hover:bg-gray-200/80 transition-colors text-xl">{action.label[language]}</button>)}
             </div>
             {/* AI Suggestions Modal */}
             {aiSuggestions.visible && (
@@ -1731,56 +1760,61 @@ const TasksScreen = ({ text, actions, onNavigate, language }) => {
     return (
         <div className="flex flex-col w-full animate-fade-in max-w-5xl mx-auto">
              <div className="text-center mb-8 sm:mb-12">
-                <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold" style={{ color: '#2D5F9D' }}>{text.split('\n')[0]}</h1>
-                <p className="text-lg sm:text-xl md:text-2xl text-slate-600 mt-4">{text.split('\n')[1] || ''}</p>
+                <h1 className="text-5xl sm:text-7xl md:text-8xl font-bold" style={{ color: '#2D5F9D' }}>{text.split('\n')[0]}</h1>
+                <p className="text-xl sm:text-2xl md:text-3xl text-slate-600 mt-4">{text.split('\n')[1] || ''}</p>
              </div>
 
-             <div className="w-full bg-white rounded-2xl shadow-xl border border-slate-200/80 p-4 sm:p-6 md:p-8">
+             <div className="w-full bg-white rounded-2xl shadow-xl border border-slate-200/80 p-6 sm:p-8 md:p-10">
                 <form onSubmit={handleAddTask} className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
-                    <input type="text" value={newTask.content} onChange={e => setNewTask({...newTask, content: e.target.value})} placeholder={language === 'Italiano' ? 'Cosa c\'è da fare?' : 'What needs to be done?'} className="sm:col-span-4 w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#3B74B8] focus:outline-none text-lg bg-white text-slate-800" />
-                    <input type="text" value={newTask.project} onChange={e => setNewTask({...newTask, project: e.target.value})} placeholder={language === 'Italiano' ? 'Progetto' : 'Project'} className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#3B74B8] focus:outline-none bg-white text-slate-800" />
-                    <select value={newTask.priority} onChange={e => setNewTask({...newTask, priority: e.target.value})} className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#3B74B8] focus:outline-none bg-white text-slate-800">
+                    <input type="text" value={newTask.content} onChange={e => setNewTask({...newTask, content: e.target.value})} placeholder={language === 'Italiano' ? 'Cosa c\'è da fare?' : 'What needs to be done?'} className="sm:col-span-4 w-full p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#3B74B8] focus:outline-none text-xl bg-white text-slate-800" />
+                    <input type="text" value={newTask.project} onChange={e => setNewTask({...newTask, project: e.target.value})} placeholder={language === 'Italiano' ? 'Progetto' : 'Project'} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#3B74B8] focus:outline-none bg-white text-slate-800 text-lg" />
+                    <select value={newTask.priority} onChange={e => setNewTask({...newTask, priority: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#3B74B8] focus:outline-none bg-white text-slate-800 text-lg">
                         <option value="high">{priorityMap.high.label}</option>
                         <option value="medium">{priorityMap.medium.label}</option>
                         <option value="low">{priorityMap.low.label}</option>
                     </select>
-                    <input type="date" value={newTask.dueDate} onChange={e => setNewTask({...newTask, dueDate: e.target.value})} className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#3B74B8] focus:outline-none bg-white text-slate-800" />
-                    <button type="submit" className="w-full p-3 text-white font-semibold rounded-lg shadow-md transition-transform transform hover:scale-105" style={{ backgroundColor: '#3B74B8' }}>{language === 'Italiano' ? 'Aggiungi' : 'Add'}</button>
+                    <input 
+                        type="date" 
+                        value={newTask.dueDate} 
+                        onChange={e => setNewTask({...newTask, dueDate: e.target.value})} 
+                        className={`w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#3B74B8] focus:outline-none bg-white text-lg ${newTask.dueDate ? 'text-slate-800' : 'text-slate-400'}`} 
+                    />
+                    <button type="submit" className="w-full p-3 text-white font-semibold rounded-lg shadow-md transition-transform transform hover:scale-105 text-lg" style={{ backgroundColor: '#3B74B8' }}>{language === 'Italiano' ? 'Aggiungi' : 'Add'}</button>
                 </form>
 
                 <div className="border-b border-slate-200 mb-4">
                     <div className="flex space-x-2 overflow-x-auto pb-2">
-                        {projects.map(p => <button key={p} onClick={() => setActiveProject(p)} className={`px-4 py-1.5 text-sm font-semibold rounded-full transition-colors ${activeProject === p ? 'bg-[#3B74B8] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{p}</button>)}
+                        {projects.map(p => <button key={p} onClick={() => setActiveProject(p)} className={`px-4 py-2 text-base font-semibold rounded-full transition-colors ${activeProject === p ? 'bg-[#3B74B8] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{p}</button>)}
                     </div>
                 </div>
 
-                <div className="space-y-8 h-[40vh] overflow-y-auto pr-2">
+                <div className="space-y-8 h-[50vh] overflow-y-auto pr-2">
                     {Object.keys(groupedTasks).length > 0 ? Object.entries(groupedTasks).map(([project, tasks]) => (
                         <div key={project}>
-                            {activeProject === 'All' && <h2 className="text-xl font-bold text-slate-800 mb-2">{project}</h2>}
-                             <ul className="space-y-2">
+                            {activeProject === 'All' && <h2 className="text-2xl font-bold text-slate-800 mb-3">{project}</h2>}
+                             <ul className="space-y-3">
                                 {tasks.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt)).map(task => (
-                                    <li key={task.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 group">
-                                        <input type="checkbox" checked={false} onChange={() => handleToggleTask(task.id)} className="h-5 w-5 rounded border-gray-300 text-[#3B74B8] focus:ring-[#3B74B8] cursor-pointer" />
-                                        <span className="flex-grow text-slate-700">{task.content}</span>
-                                        {task.dueDate && <span className="text-xs bg-slate-200 text-slate-600 px-2 py-1 rounded-full">{new Date(task.dueDate).toLocaleDateString(language === 'Italiano' ? 'it-IT' : 'en-US')}</span>}
-                                        <span className={`h-3 w-3 rounded-full ${priorityMap[task.priority]?.color || 'bg-gray-400'}`}></span>
-                                        <button onClick={() => handleDeleteTask(task.id)} className="p-1 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100"><TrashIcon className="h-5 w-5" /></button>
+                                    <li key={task.id} className="flex items-center gap-4 p-3 rounded-lg hover:bg-slate-50 group">
+                                        <input type="checkbox" checked={false} onChange={() => handleToggleTask(task.id)} className="h-6 w-6 rounded border-gray-300 text-[#3B74B8] focus:ring-[#3B74B8] cursor-pointer" />
+                                        <span className="flex-grow text-slate-700 text-lg">{task.content}</span>
+                                        {task.dueDate && <span className="text-sm bg-slate-200 text-slate-600 px-2 py-1 rounded-full">{new Date(task.dueDate).toLocaleDateString(language === 'Italiano' ? 'it-IT' : 'en-US')}</span>}
+                                        <span className={`h-3.5 w-3.5 rounded-full ${priorityMap[task.priority]?.color || 'bg-gray-400'}`}></span>
+                                        <button onClick={() => handleDeleteTask(task.id)} className="p-1 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100"><TrashIcon className="h-6 w-6" /></button>
                                     </li>
                                 ))}
                             </ul>
                         </div>
-                    )) : (<p className="text-slate-500 italic py-4">{language === 'Italiano' ? 'Nessuna attività da fare. Complimenti!' : 'No tasks to do. Well done!'}</p>)}
+                    )) : (<p className="text-slate-500 italic py-4 text-lg">{language === 'Italiano' ? 'Nessuna attività da fare. Complimenti!' : 'No tasks to do. Well done!'}</p>)}
                     
                     {completedTasks.length > 0 && activeProject === 'All' && (
                         <div>
-                            <h2 className="text-xl font-bold text-slate-500 mt-8 mb-2 border-t pt-4">{language === 'Italiano' ? 'Completate' : 'Completed'}</h2>
-                             <ul className="space-y-2">
+                            <h2 className="text-2xl font-bold text-slate-500 mt-8 mb-3 border-t pt-4">{language === 'Italiano' ? 'Completate' : 'Completed'}</h2>
+                             <ul className="space-y-3">
                                 {completedTasks.map(task => (
-                                    <li key={task.id} className="flex items-center gap-3 p-2 group">
-                                        <input type="checkbox" checked={true} onChange={() => handleToggleTask(task.id)} className="h-5 w-5 rounded border-gray-300 text-[#3B74B8] focus:ring-[#3B74B8] cursor-pointer" />
-                                        <span className="flex-grow text-slate-400 line-through">{task.content}</span>
-                                        <button onClick={() => handleDeleteTask(task.id)} className="p-1 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100"><TrashIcon className="h-5 w-5" /></button>
+                                    <li key={task.id} className="flex items-center gap-4 p-2 group">
+                                        <input type="checkbox" checked={true} onChange={() => handleToggleTask(task.id)} className="h-6 w-6 rounded border-gray-300 text-[#3B74B8] focus:ring-[#3B74B8] cursor-pointer" />
+                                        <span className="flex-grow text-slate-400 line-through text-lg">{task.content}</span>
+                                        <button onClick={() => handleDeleteTask(task.id)} className="p-1 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100"><TrashIcon className="h-6 w-6" /></button>
                                     </li>
                                 ))}
                             </ul>
@@ -1790,7 +1824,408 @@ const TasksScreen = ({ text, actions, onNavigate, language }) => {
              </div>
 
              <div className="flex items-center justify-center gap-4 mt-8">
-                {actions.map((action, index) => <button key={index} onClick={() => onNavigate(action.target)} className="px-8 py-3 text-slate-600 font-semibold rounded-full hover:bg-gray-200/80 transition-colors text-lg">{action.label[language]}</button>)}
+                {actions.map((action, index) => <button key={index} onClick={() => onNavigate(action.target)} className="px-10 py-4 text-slate-600 font-semibold rounded-full hover:bg-gray-200/80 transition-colors text-xl">{action.label[language]}</button>)}
+            </div>
+        </div>
+    );
+};
+
+
+// --- Componente per la Dashboard ---
+const DashboardScreen = ({ text, actions, onNavigate, language }) => {
+    const [tasks, setTasks] = useState([]);
+    const [notes, setNotes] = useState([]);
+
+    const refreshData = useCallback(() => {
+        const allTasks = getTasks();
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Imposta l'ora a mezzanotte per il confronto
+
+        const overdueAndTodayTasks = allTasks.filter(t => {
+            if (t.completed) return false;
+            const dueDate = new Date(t.dueDate + 'T00:00:00'); // Considera la data come mezzanotte locale
+            return dueDate <= today;
+        });
+        setTasks(overdueAndTodayTasks);
+
+        const allNotes = getNotes();
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const todayNotes = allNotes.filter(n => n.date === todayStr);
+        const recentTodayNotes = todayNotes.sort((a, b) => b.id - a.id).slice(0, 3);
+        setNotes(recentTodayNotes);
+    }, []);
+
+
+    useEffect(() => {
+        refreshData();
+        window.addEventListener('storage', refreshData);
+        return () => window.removeEventListener('storage', refreshData);
+    }, [refreshData]);
+
+    // Widget Component: Attività di Oggi
+    const TodayTasksWidget = ({ tasks }) => (
+        <div className="bg-white rounded-3xl shadow-lg border border-slate-200/80 p-12">
+            <h3 className="font-bold text-3xl text-slate-800 mb-8">{language === 'Italiano' ? 'Le Mie Attività Scadute' : 'My Overdue Tasks'}</h3>
+            {tasks.length > 0 ? (
+                <ul className="space-y-3">
+                    {tasks.slice(0, 3).map(task => (
+                        <li key={task.id} className="text-slate-600 text-xl p-3 bg-slate-50 rounded-md">{task.content}</li>
+                    ))}
+                </ul>
+            ) : (
+                <p className="text-slate-500 text-xl italic">{language === 'Italiano' ? 'Nessuna attività in scadenza. Complimenti!' : 'No tasks due. Well done!'}</p>
+            )}
+            <button onClick={() => onNavigate('tasks')} className="mt-8 text-lg font-semibold text-[#3B74B8] hover:underline">{language === 'Italiano' ? 'Vedi tutte le attività →' : 'View all tasks →'}</button>
+        </div>
+    );
+    
+    // Widget Component: Appunti Recenti
+    const RecentNotesWidget = ({ notes }) => (
+        <div className="bg-white rounded-3xl shadow-lg border border-slate-200/80 p-12">
+            <h3 className="font-bold text-3xl text-slate-800 mb-8">{language === 'Italiano' ? 'Appunti di Oggi' : 'Today\'s Notes'}</h3>
+            {notes.length > 0 ? (
+                <ul className="space-y-3">
+                    {notes.map(note => (
+                        <li key={note.id} className="text-slate-600 text-xl p-3 bg-slate-50 rounded-md truncate">{note.title || (language === 'Italiano' ? 'Senza titolo' : 'Untitled')}</li>
+                    ))}
+                </ul>
+            ) : (
+                <p className="text-slate-500 text-xl italic">{language === 'Italiano' ? 'Nessun appunto per oggi.' : 'No notes for today.'}</p>
+            )}
+             <button onClick={() => onNavigate('agenda')} className="mt-8 text-lg font-semibold text-[#3B74B8] hover:underline">{language === 'Italiano' ? 'Vai all\'agenda →' : 'Go to agenda →'}</button>
+        </div>
+    );
+
+    // Widget Component: Cattura Veloce
+    const QuickCaptureWidget = ({ onTaskAdded }) => {
+        const [content, setContent] = useState('');
+        
+        const handleSubmit = (e) => {
+            e.preventDefault();
+            if (content.trim() === '') return;
+            const currentTasks = getTasks();
+            const newTask = {
+                id: Date.now(),
+                content: content.trim(),
+                completed: false,
+                createdAt: new Date().toISOString(),
+                priority: 'medium',
+                dueDate: new Date().toISOString().slice(0, 10),
+                project: language === 'Italiano' ? 'Veloce' : 'Quick Capture'
+            };
+            saveTasks([newTask, ...currentTasks]);
+            setContent('');
+            onTaskAdded();
+        };
+
+        return (
+             <div className="bg-white rounded-3xl shadow-lg border border-slate-200/80 p-12">
+                <h3 className="font-bold text-3xl text-slate-800 mb-8">{language === 'Italiano' ? 'Cattura Veloce' : 'Quick Capture'}</h3>
+                <form onSubmit={handleSubmit} className="flex gap-2">
+                    <input type="text" value={content} onChange={e => setContent(e.target.value)} placeholder={language === 'Italiano' ? 'Aggiungi un\'attività per oggi...' : 'Add a task for today...'} className="w-full p-4 border border-slate-300 rounded-lg text-xl focus:ring-2 focus:ring-[#3B74B8] focus:outline-none bg-white text-slate-800"/>
+                    <button type="submit" className="p-4 bg-[#3B74B8] text-white rounded-lg hover:bg-[#2D5F9D]"><PlusIcon className="h-8 w-8"/></button>
+                </form>
+            </div>
+        );
+    };
+
+    // Widget Component: Accesso Rapido
+    const QuickAccessWidget = ({ actions }) => {
+        const presentationActions = actions.filter(a => a.color !== 'green');
+        const toolActions = actions.filter(a => a.color === 'green');
+
+        const ActionButton = ({ action }) => {
+            const isGreen = action.color === 'green';
+            const bgColor = isGreen ? 'bg-green-600 hover:bg-green-700' : 'bg-[#3B74B8] hover:bg-[#2D5F9D]';
+            return (
+                <button onClick={() => onNavigate(action.target)} className={`w-full p-6 text-white font-semibold rounded-full shadow-md transition-colors text-center text-xl ${bgColor}`}>
+                    {action.label[language]}
+                </button>
+            );
+        };
+
+        return (
+            <div className="bg-white rounded-3xl shadow-lg border border-slate-200/80 p-12 md:col-span-2 lg:col-span-3">
+                 <div className="space-y-10">
+                    <div>
+                        <h4 className="text-2xl font-bold text-slate-800 mb-6">{language === 'Italiano' ? 'Presentazioni' : 'Presentations'}</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                            {presentationActions.map(action => <ActionButton key={action.target} action={action} />)}
+                        </div>
+                    </div>
+                    <div>
+                        <h4 className="text-2xl font-bold text-slate-800 mb-6">{language === 'Italiano' ? 'Strumenti' : 'Tools'}</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                            {toolActions.map(action => <ActionButton key={action.target} action={action} />)}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    return (
+        <div className="animate-fade-in w-full">
+            <div className="text-center mb-16">
+                <div className="relative inline-block">
+                    <h1 className="text-8xl sm:text-9xl font-bold flex items-start justify-center" style={{ color: '#2D5F9D' }}>
+                        <span>Celerya</span>
+                        <span className="text-5xl sm:text-6xl ml-2" style={{lineHeight: 0.8}}>®</span>
+                    </h1>
+                    <div 
+                      className="w-full h-1 absolute -bottom-1"
+                      style={{
+                        backgroundImage: `url("data:image/svg+xml,%3csvg width='40' height='3' viewBox='0 0 40 3' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M0.333984 1.5C5.33398 1.5 5.33398 -0.499999 10.334 1.5C15.334 3.5 15.334 1.5 20.334 1.5C25.334 -0.5 25.334 1.5 30.334 1.5C35.334 3.5 35.334 1.5 40.334 1.5' stroke='%23E6332A' stroke-width='1.2'/%3e%3c/svg%3e")`,
+                        backgroundSize: '20px 3px',
+                        backgroundRepeat: 'repeat-x',
+                      }}
+                    ></div>
+                </div>
+                <p className="text-5xl sm:text-6xl text-slate-600 mt-16">
+                    {language === 'Italiano' ? 'Goditi il tuo business.' : 'Enjoy your business.'}
+                </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+                <TodayTasksWidget tasks={tasks} />
+                <RecentNotesWidget notes={notes} />
+                <QuickCaptureWidget onTaskAdded={refreshData} />
+                <QuickAccessWidget actions={actions} />
+            </div>
+        </div>
+    );
+};
+
+// --- Componente per l'Header Globale con Ricerca Universale ---
+const GlobalHeader = ({ onAskAi }) => {
+    const [query, setQuery] = useState('');
+    const [isActive, setIsActive] = useState(false);
+
+    const handleAskAi = () => {
+        if(query.trim() === '') return;
+        onAskAi(query);
+        setQuery('');
+        setIsActive(false);
+    }
+    
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            handleAskAi();
+        }
+    };
+
+    return (
+        <header className="fixed top-0 left-0 right-0 z-40 p-4 flex justify-center">
+            <div className="relative w-full max-w-2xl">
+                <input
+                    type="text"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onFocus={() => setIsActive(true)}
+                    onBlur={() => setTimeout(() => setIsActive(false), 200)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Cerca in appunti, attività o chiedi all'AI..."
+                    className="w-full pl-6 pr-16 py-4 text-xl bg-white/80 backdrop-blur-md rounded-full shadow-lg border border-slate-300 focus:ring-2 focus:ring-[#3B74B8] focus:outline-none transition-all"
+                />
+                 {isActive && query.length > 0 && (
+                    <div className="absolute top-full mt-2 w-full bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden animate-fade-in-fast">
+                        <div className="p-2">
+                             <button onClick={handleAskAi} className="w-full text-left p-4 rounded-lg hover:bg-sky-50 flex items-center gap-4 transition-colors">
+                                <SparklesIcon className="h-6 w-6 text-sky-500 flex-shrink-0"/>
+                                <span className="font-semibold text-slate-700 truncate">Chiedi all'assistente AI: "{query}"</span>
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </header>
+    );
+};
+
+// --- Helper per la gestione file dell'AI ---
+const fileToGenerativePart = async (file) => {
+  const base64EncodedDataPromise = new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result.split(',')[1]);
+    reader.readAsDataURL(file);
+  });
+  return {
+    inlineData: { data: await base64EncodedDataPromise, mimeType: file.type },
+  };
+};
+
+// --- Componente per l'Assistente AI ---
+const AiAssistantScreen = ({ initialQuery, onClose, onExecuteCommand, language }) => {
+    const [messages, setMessages] = useState([]);
+    const [input, setInput] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [file, setFile] = useState(null);
+    const fileInputRef = useRef(null);
+    const messagesEndRef = useRef(null);
+
+    useEffect(() => {
+        if (initialQuery && messages.length === 0) {
+            handleSendMessage(initialQuery);
+        }
+    }, [initialQuery]);
+
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages, isLoading]);
+
+    const handleSendMessage = async (queryOverride) => {
+        const userQuery = queryOverride || input;
+        if (userQuery.trim() === '' && !file) return;
+
+        setIsLoading(true);
+        setInput('');
+        
+        const userMessage = { role: 'user', text: userQuery, file: file ? { name: file.name, type: file.type } : null };
+        setMessages(prev => [...prev, userMessage]);
+        
+        let filePart = null;
+        if (file) {
+            filePart = await fileToGenerativePart(file);
+            setFile(null);
+        }
+
+        const notesContext = getNotes().map(n => `APPPUNTO (Data: ${n.date}, Titolo: ${n.title}):\n${n.content}`).join('\n\n');
+        const tasksContext = getTasks().map(t => `ATTIVITA' (${t.completed ? 'Completata' : 'Da fare'}, Scadenza: ${t.dueDate || 'N/D'}, Progetto: ${t.project}): ${t.content}`).join('\n');
+        const dataContext = `--- APPUNTI DELL'UTENTE ---\n${notesContext}\n\n--- ATTIVITA' DELL'UTENTE ---\n${tasksContext}`;
+
+        const screenInfo = `
+- Schermate navigabili (usa l'ID per il comando 'navigate'):
+    - 'start': La dashboard principale con un riepilogo.
+    - 'agenda': L'agenda dove l'utente scrive e gestisce i suoi appunti.
+    - 'tasks': La lista delle cose da fare (to-do list).
+    - 'why_presentation': Una presentazione sul 'Perché Celerya'.
+    - 'ecosystem': La schermata che descrive la soluzione e l'ecosistema SYD.
+    - 'integrations_presentation': Una presentazione sulle modalità di integrazione.
+    - 'pricing': La schermata con i piani tariffari.
+    - 'applications_hub': Una pagina con link a strumenti esterni utili.`;
+    
+        const appLinksScreen = demoData.screens.find(s => s.id === 'applications_hub');
+        const linksInfo = appLinksScreen ? appLinksScreen.links.map(l => `- ${l.label.Italiano}: ${l.href}`).join('\n') : '';
+        const appContext = `\n\n--- INFORMAZIONI SULL'APPLICAZIONE ---\n${screenInfo}\n\n- Link esterni (usa l'URL per il comando 'open_url'):\n${linksInfo}`;
+
+        const fullContext = `${dataContext}${appContext}`;
+
+        const systemInstruction = `Sei l'assistente AI di Celerya. Rispondi in italiano. Il tuo obiettivo è aiutare l'utente rispondendo a domande basate sui suoi dati (appunti, attività) e eseguendo azioni nell'app. Puoi navigare tra le schermate o aprire link esterni. Quando l'utente chiede di vedere una sezione dell'app (es. 'mostrami la mia agenda'), usa il comando 'navigate' con l'ID corretto. Quando chiede di aprire un'applicazione esterna (es. 'apri Planner'), usa 'open_url' con l'URL corretto. Fornisci sempre una 'responseText' conversazionale per confermare l'azione o rispondere alla domanda. Rispondi SOLO con un oggetto JSON valido che corrisponda allo schema fornito.`;
+
+        const commandSchema = {
+            type: Type.OBJECT,
+            properties: {
+                responseText: {
+                    type: Type.STRING,
+                    description: "La risposta testuale e conversazionale da mostrare all'utente, in italiano."
+                },
+                command: {
+                    type: Type.OBJECT,
+                    description: "Un comando opzionale da far eseguire all'applicazione se l'utente ha chiesto un'azione specifica (navigare, aprire URL). Lasciare nullo se l'utente sta solo conversando.",
+                    nullable: true,
+                    properties: {
+                        action: {
+                            type: Type.STRING,
+                            enum: ["navigate", "open_url"],
+                            description: "Il tipo di azione da eseguire."
+                        },
+                        target: {
+                            type: Type.STRING,
+                            description: "L'ID della schermata per l'azione 'navigate', o l'URL completo per l'azione 'open_url'."
+                        }
+                    }
+                }
+            }
+        };
+        
+        try {
+            const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+            
+            const contents = { parts: [{ text: `CONTESTO:\n${fullContext}\n\nDOMANDA UTENTE:\n${userQuery}` }] };
+            if(filePart) contents.parts.push(filePart);
+            
+            const response = await ai.models.generateContent({
+                model: "gemini-2.5-flash",
+                contents,
+                config: {
+                    systemInstruction,
+                    responseMimeType: "application/json",
+                    responseSchema: commandSchema,
+                },
+            });
+            
+            const jsonResponse = JSON.parse(response.text);
+
+            setMessages(prev => [...prev, { role: 'model', text: jsonResponse.responseText }]);
+
+            if (jsonResponse.command && jsonResponse.command.action && jsonResponse.command.target) {
+                onExecuteCommand(jsonResponse.command);
+            }
+
+        } catch (error) {
+            console.error("Gemini API Error:", error);
+            setMessages(prev => [...prev, { role: 'model', text: 'Oops! Qualcosa è andato storto. Controlla la chiave API e la console per i dettagli.', isError: true }]);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
+    const handleKeyDown = (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSendMessage();
+      }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in-fast">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl h-[90vh] flex flex-col overflow-hidden">
+                <header className="flex items-center justify-between p-4 border-b border-slate-200">
+                    <div className="flex items-center gap-3">
+                        <CeleryaAiIcon />
+                        <h2 className="text-xl font-bold text-slate-800">Assistente AI</h2>
+                    </div>
+                    <button onClick={onClose} className="p-2 rounded-full text-slate-500 hover:bg-slate-100"><XMarkIcon className="h-6 w-6" /></button>
+                </header>
+                
+                <div className="flex-grow overflow-y-auto p-6 space-y-6">
+                    {messages.map((msg, index) => (
+                        <div key={index} className={`flex items-start gap-4 ${msg.role === 'user' ? 'justify-end' : ''}`}>
+                            {msg.role === 'model' && <CeleryaAiIcon />}
+                            <div className={`p-4 rounded-2xl max-w-xl text-lg ${msg.role === 'user' ? 'bg-[#3B74B8] text-white rounded-br-none' : 'bg-slate-100 text-slate-800 rounded-bl-none'}`}>
+                                {msg.file && <div className="mb-2 p-2 bg-black/10 rounded-lg text-sm">Allegato: {msg.file.name}</div>}
+                                {msg.isError ? <p className="text-red-500">{msg.text}</p> : <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: msg.text.replace(/\n/g, '<br />') }}></div>}
+                            </div>
+                            {msg.role === 'user' && <div className="bg-slate-200 rounded-full p-2 flex items-center justify-center shadow-inner"><UserIcon className="h-6 w-6 text-slate-600"/></div>}
+                        </div>
+                    ))}
+                    {isLoading && (
+                         <div className="flex items-start gap-4">
+                            <CeleryaAiIcon />
+                            <div className="p-4 rounded-2xl bg-slate-100 text-slate-500 italic rounded-bl-none text-lg">Sto pensando...</div>
+                        </div>
+                    )}
+                    <div ref={messagesEndRef} />
+                </div>
+                
+                <footer className="p-4 border-t border-slate-200 bg-white">
+                    {file && <div className="flex items-center justify-between bg-sky-100 text-sky-800 p-2 rounded-lg mb-2 text-sm"><span>{file.name}</span><button onClick={() => setFile(null)}><XMarkIcon className="h-4 w-4"/></button></div>}
+                    <div className="relative">
+                        <textarea
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            placeholder={language === 'Italiano' ? 'Chiedi qualcosa...' : 'Ask something...'}
+                            className="w-full p-4 pr-24 border border-slate-300 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-[#3B74B8] text-lg"
+                            rows="1"
+                        />
+                         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                             <button onClick={() => fileInputRef.current.click()} className="p-2 text-slate-500 hover:text-[#3B74B8]"><PaperClipIcon className="h-6 w-6"/></button>
+                             <button onClick={() => handleSendMessage()} disabled={isLoading} className="px-4 py-2 bg-[#3B74B8] text-white font-semibold rounded-lg disabled:bg-slate-400">Invia</button>
+                         </div>
+                         <input type="file" ref={fileInputRef} onChange={(e) => setFile(e.target.files[0])} className="hidden" />
+                    </div>
+                </footer>
             </div>
         </div>
     );
@@ -1802,6 +2237,8 @@ const App = () => {
   const [language, setLanguage] = useState('Italiano');
   const [currentScreenId, setCurrentScreenId] = useState('start');
   const [isExiting, setIsExiting] = useState(false);
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
+  const [assistantQuery, setAssistantQuery] = useState('');
 
   const screens = useMemo(() => demoData.screens, []);
   
@@ -1814,8 +2251,34 @@ const App = () => {
     setTimeout(() => {
       setCurrentScreenId(targetId);
       setIsExiting(false);
+      window.scrollTo(0, 0);
     }, 300); // Match animation duration
   }, []);
+  
+  const handleAskAi = (query) => {
+    setAssistantQuery(query);
+    setIsAssistantOpen(true);
+  };
+
+  const handleExecuteCommand = (command) => {
+    const { action, target } = command;
+
+    setTimeout(() => { // Delay to allow user to read the AI response
+        setIsAssistantOpen(false); // Close assistant after executing command
+        
+        if (action === 'navigate') {
+            const screenExists = screens.some(s => s.id === target);
+            if (screenExists) {
+                handleNavigation(target);
+            } else {
+                console.warn(`Navigation target "${target}" not found.`);
+                // Maybe show a message to the user? For now, just log.
+            }
+        } else if (action === 'open_url') {
+            window.open(target, '_blank', 'noopener,noreferrer');
+        }
+    }, 1500); // 1.5 second delay
+  };
 
   const renderScreen = () => {
     if (!currentScreen) return null;
@@ -1836,6 +2299,8 @@ const App = () => {
     };
 
     switch (currentScreen.type) {
+      case 'dashboard':
+        return <DashboardScreen {...props} />;
       case 'title':
         return <TitleScreen {...props} />;
       case 'presentation':
@@ -1858,7 +2323,16 @@ const App = () => {
   };
 
   return (
-    <div className="bg-slate-50 text-slate-800 min-h-screen w-full flex flex-col items-center justify-center font-sans relative p-4 sm:p-8">
+    <div className="bg-slate-50 text-slate-800 min-h-screen w-full flex flex-col items-center font-sans relative p-6 sm:p-12 pt-28 sm:pt-32">
+      <GlobalHeader onAskAi={handleAskAi} />
+      {isAssistantOpen && (
+          <AiAssistantScreen 
+              initialQuery={assistantQuery} 
+              onClose={() => setIsAssistantOpen(false)} 
+              onExecuteCommand={handleExecuteCommand}
+              language={language}
+          />
+      )}
       {demoData.languageSelector && (
         <div className="absolute top-4 right-4 sm:top-8 sm:right-8 z-20">
           <LanguageSelector
@@ -1869,7 +2343,7 @@ const App = () => {
         </div>
       )}
       
-      <main className="w-full max-w-7xl mx-auto z-10">
+      <main className={`w-full max-w-screen-2xl mx-auto z-10`}>
         <div 
           className={`transition-opacity duration-300 ease-in-out w-full ${isExiting ? 'opacity-0' : 'opacity-100'}`}
           key={currentScreenId}
