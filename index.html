@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF--8" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Celerya - Demo Integrazione</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Aggiungo Babel Standalone per la compilazione "al volo" di TSX/JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      /* For custom scrollbar and font */
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+      /* Nascondi l'app di default */
+      #root {
+        display: none;
+      }
+      @keyframes progress-bar-animation {
+        from { width: 0%; }
+        to { width: 100%; }
+      }
+      @keyframes fade-in {
+          from { opacity: 0; transform: scale(0.98); }
+          to { opacity: 1; transform: scale(1); }
+      }
+      @keyframes slide-up-fade {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fade-in {
+          animation: fade-in 0.5s ease-out forwards;
+      }
+      .animate-fade-in-fast {
+          animation: fade-in 0.3s ease-out forwards;
+      }
+      .animate-slide-up-fade {
+          animation: slide-up-fade 0.5s ease-out forwards;
+      }
+      .perspective-1000 {
+        perspective: 1000px;
+      }
+      .transform-style-3d {
+        transform-style: preserve-3d;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://esm.sh/react-dom@^19.1.1/",
+    "react/": "https://esm.sh/react@^19.1.1/",
+    "react": "https://esm.sh/react@^19.1.1"
+  }
+}
+</script>
+</head>
+  <body class="bg-slate-50">
+    <!-- Schermata di Login -->
+    <div id="login-container" class="fixed inset-0 bg-gray-100 flex items-center justify-center z-50 p-4">
+      <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm animate-fade-in">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold" style="color: #2D5F9D;">Celerya</h1>
+            <p class="text-slate-500 mt-1">Accesso Riservato</p>
+        </div>
+        <form id="login-form">
+          <div class="mb-5">
+            <label for="username" class="block text-gray-700 text-sm font-bold mb-2">Nome Utente</label>
+            <input type="text" id="username" name="username" placeholder="Il tuo nome utente" class="shadow-sm appearance-none border-gray-600 bg-gray-700 rounded-lg w-full py-3 px-4 text-white placeholder-gray-400 leading-tight focus:outline-none focus:ring-2 focus:ring-[#3B74B8]" required autocomplete="username">
+          </div>
+          <div class="mb-6">
+            <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Password</label>
+            <input type="password" id="password" name="password" placeholder="••••••••" class="shadow-sm appearance-none border-gray-600 bg-gray-700 rounded-lg w-full py-3 px-4 text-white placeholder-gray-400 mb-2 leading-tight focus:outline-none focus:ring-2 focus:ring-[#3B74B8]" required autocomplete="current-password">
+            <p id="error-message" class="text-red-500 text-xs italic" style="display: none;">Credenziali non valide. Riprova.</p>
+          </div>
+          <div class="flex items-center justify-between">
+            <button type="submit" class="w-full text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-transform transform hover:scale-105" style="background-color: #3B74B8;">
+              Accedi
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <div id="root"></div>
+
+    <!-- Script di gestione del login -->
+    <script>
+      (function() {
+        const correctUser = 'Claudio Lupica Rinato';
+        const correctPass = 'Andrea17041992.';
+        
+        const loginForm = document.getElementById('login-form');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const errorMessage = document.getElementById('error-message');
+        const loginContainer = document.getElementById('login-container');
+        const rootApp = document.getElementById('root');
+
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(event) {
+                event.preventDefault(); // Impedisce il ricaricamento della pagina
+                
+                const user = usernameInput.value;
+                const pass = passwordInput.value;
+
+                if (user === correctUser && pass === correctPass) {
+                    // Credenziali corrette
+                    loginContainer.style.display = 'none';
+                    rootApp.style.display = 'block';
+                } else {
+                    // Credenziali errate
+                    errorMessage.style.display = 'block';
+                    passwordInput.value = ''; // Pulisce il campo password
+                    passwordInput.focus(); // Rimette il focus sul campo password
+                    // Fa vibrare il form per un feedback visivo
+                    loginContainer.querySelector('div').classList.add('animate-shake');
+                    setTimeout(() => {
+                        loginContainer.querySelector('div').classList.remove('animate-shake');
+                    }, 500);
+                }
+            });
+        }
+        
+        // Aggiungo una piccola animazione di shake per il feedback di errore
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+                20%, 40%, 60%, 80% { transform: translateX(5px); }
+            }
+            .animate-shake {
+                animation: shake 0.5s ease-in-out;
+            }
+        `;
+        document.head.appendChild(style);
+      })();
+    </script>
+    
+    <!-- 
+      TUTTO IL CODICE DELL'APPLICAZIONE È STATO UNITO QUI SOTTO.
+      Questo risolve i problemi di caricamento dei moduli (MIME type).
+    -->
+    <script type="text/babel" data-type="module">
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import ReactDOM from 'react-dom/client';
+
+// --- Contenuto da data/demo.ts ---
+const demoData = {
+  "version": "1.2",
+  "title": "Celerya - Presentazione",
+  "languageSelector": true,
+  "languages": ["Italiano", "English"],
+  "screens": [
+    {
+      "id": "start",
+      "type": "title",
+      "text": {
+        "Italiano": "Celerya®\nGoditi il tuo business.",
+        "English": "Celerya®\nEnjoy your business."
+      },
+      "actions": [
+        { "label": { "Italiano": "Perché Celerya", "English": "Why Celerya" }, "action": "next", "target": "why_presentation" },
+        { "label": { "Italiano": "Soluzione", "English": "Solution" }, "action": "next", "target": "ecosystem" },
+        { "label": { "Italiano": "Integrazioni", "English": "Integrations" }, "action": "next", "target": "integrations_presentation" },
+        { "label": { "Italiano": "Prezzi", "English": "Pricing" }, "action": "next", "target": "pricing" }
+      ]
+    },
+    {
+      "id": "why_presentation",
+      "type": "presentation",
+      "text": { "Italiano": "", "English": "" },
+      "steps": [
+        {
+          "id": "why_step1",
+          "text": {
+            "Italiano": "Perché Celerya\nLa strategia di scambio delle informazioni è oggi più importante che mai. La complessità dei processi e la mancanza di collaborazione hanno un impatto negativo sui risultati aziendali.",
+            "English": "Why Celerya\nThe information exchange strategy is more important today than ever. The complexity of processes and lack of collaboration negatively impact business results."
+          }
+        },
+        {
+          "id": "why_step2",
+          "text": {
+            "Italiano": "Il Problema\nQuasi l'80% delle aziende si affida a processi manuali o dati isolati, causando inefficienze, errori costosi e una visibilità limitata delle operazioni.",
+            "English": "The Problem\nNearly 80% of companies rely on manual processing or siloed data, causing inefficiencies, costly errors, and limited visibility of operations."
+          }
+        },
+        {
+          "id": "why_step3",
+          "text": {
+            "Italiano": "Scambio Dati Inefficiente\nNell'era dell'IA, le aziende continuano a scambiare dati manualmente. \"Non doveva la tecnologia risolvere questo casino? Sono ancora sommerso di scartoffie!\"",
+            "English": "Inefficient Data Exchange\nIn the AI era, companies still exchange data manually. \"Weren't all these technologies supposed to fix this mess? I'm still buried in paperwork!\""
+          }
+        },
+        {
+          "id": "why_step4",
+          "text": {
+            "Italiano": "Impatto sul Business\nI sistemi disconnessi aumentano i costi fino al 60% e riducono i ROI fino al 20%.",
+            "English": "Business Impact\nDisconnected systems increase costs by up to 60% and reduce ROIs by up to 20%."
+          }
+        }
+      ],
+      "next": "why_summary"
+    },
+    {
+      "id": "why_summary",
+      "type": "summary",
+      "text": {
+        "Italiano": "Pronto a Semplificare?\nOra che conosci il problema, scopri la nostra soluzione per l'integrazione.",
+        "English": "Ready to Simplify?\nNow that you know the problem, discover our integration solution."
+      },
+      "actions": [
+        { "label": { "Italiano": "Scopri le Integrazioni", "English": "Discover Integrations" }, "action": "next", "target": "integrations_presentation" },
+        { "label": { "Italiano": "Torna alla Home", "English": "Back to Home" }, "action": "next", "target": "start" }
+      ]
+    },
+    {
+      "id": "ecosystem",
+      "type": "ecosystem",
+      "text": { "Italiano": "", "English": "" },
+      "ecosystem": {
+        "title": { "Italiano": "L'Ecosistema", "English": "The Ecosystem" },
+        "subtitle": {
+          "Italiano": "SYD sta rivoluzionando lo scambio di dati B2B abilitando l'<b>accesso in tempo reale ai dati</b> e trasformando la gestione dei dati da fonte di costo in <b>asset monetizzabile</b>, connettendo al contempo agenti AI, LLM/Blockchain e strumenti di automazione con <b>PMI</b> e <b>Grandi Aziende</b>.",
+          "English": "SYD is revolutionizing B2B data exchange by enabling the <b>real-time access to data</b> and <b>turn data management from cost source into monetizable asset</b>, while connecting AI agents, LLM/Blockchain, and automation tools with both <b>SMEs</b> and <b>Enterprises</b>"
+        },
+        "gatewayTitle": { "Italiano": "SYD Data Gateway", "English": "SYD Data Gateway" },
+        "gatewayProducer": { "Italiano": "Data Producer", "English": "Data Producer" },
+        "gatewayUser": { "Italiano": "Data User", "English": "Data User" },
+        "servicesTitle": { "Italiano": "Servizi Aggiuntivi/Terze Parti", "English": "Additional/3rd Parties Services" },
+        "services": [
+          {
+            "title": { "Italiano": "AI Agent", "English": "AI Agent" },
+            "description": {
+              "Italiano": "SYD funge da <b>fonte dati affidabile</b> fornendo agli strumenti di AI accesso a <b>dati PMI standardizzati e in tempo reale</b> precedentemente inaccessibili.",
+              "English": "SYD serves as the <b>trusted data source</b> giving AI tools access to <b>standardized, real-time SME data</b> previously inaccessible"
+            }
+          },
+          {
+            "title": { "Italiano": "Strumenti di Automazione", "English": "Automation tools" },
+            "description": {
+              "Italiano": "SYD potenzia l'<b>automazione no-code in tempo reale</b>, integrando senza problemi dati strutturati in CRM ed ERP.",
+              "English": "SYD powers <b>real-time, no-code automation</b>, seamlessly integrating structured data into CRMs and ERPs"
+            }
+          },
+          {
+            "title": { "Italiano": "LLM/Blockchain", "English": "LLM/Blockchain" },
+            "description": {
+              "Italiano": "Fornisce <b>dati aziendali strutturati e in tempo reale</b> a diverse reti per mantenerli privati e condividerli selettivamente.",
+              "English": "Provides <b>real-time, structured business data</b> to different networks to keep it private and share it selectively"
+            }
+          }
+        ]
+      },
+      "actions": [
+        { "label": { "Italiano": "Torna alla Home", "English": "Back to Home" }, "action": "next", "target": "start" }
+      ]
+    },
+    {
+      "id": "integrations_presentation",
+      "type": "presentation",
+      "text": {
+        "Italiano": "",
+        "English": ""
+      },
+      "steps": [
+        {
+          "id": "step1",
+          "text": {
+            "Italiano": "Caricamento manuale\nTrascina o carica i tuoi file (PDF, Excel, immagini). Celerya legge i dati in automatico grazie all'AI.",
+            "English": "Manual upload\nDrag or upload your files (PDF, Excel, images). Celerya automatically reads your data thanks to AI."
+          }
+        },
+        {
+          "id": "step2",
+          "text": {
+            "Italiano": "Cartelle condivise\nCollega una cartella Google Drive o OneDrive e Celerya aggiornerà i dati in automatico.",
+            "English": "Shared folders\nConnect a Google Drive or OneDrive folder and Celerya will update data automatically."
+          }
+        },
+        {
+          "id": "step3",
+          "text": {
+            "Italiano": "Integrazione sistemi\nCollegati direttamente ai tuoi sistemi software per uno scambio dati automatico.",
+            "English": "System integration\nConnect directly to your software systems for automatic data exchange."
+          }
+        },
+        {
+          "id": "dashboard_step",
+          "text": {
+            "Italiano": "Dashboard Celerya\nLotti, scadenze, schede tecniche pronte all'uso.",
+            "English": "Celerya Dashboard\nLots, expiries, and technical sheets ready to use."
+          }
+        }
+      ],
+      "next": "final_summary"
+    },
+    {
+      "id": "pricing",
+      "type": "pricing",
+      "text": {
+        "Italiano": "Piani Tariffari\nLe nostre offerte",
+        "English": "Pricing Plans\nOur offers"
+      },
+      "scenarios": [
+        {
+          "id": "scenario1",
+          "title": { "Italiano": "Scenario 1 – Utilizzo AI per Dati Interni", "English": "Scenario 1 – AI Usage for Internal Data" },
+          "description": { 
+            "Italiano": "Il ricevente lavora autonomamente. Utilizza un modulo AI per analizzare i file, estrarre dati strutturati e generare output (es. Excel, alert).",
+            "English": "The receiver works autonomously. It uses an AI module to analyze files, extract structured data, and generate outputs (e.g., Excel, alerts)."
+          },
+          "tiers": [
+            { "service": { "Italiano": "Sottoscrizione piattaforma SYD", "English": "SYD platform subscription" }, "cost": { "Italiano": "€270 + IVA /anno", "English": "€270 + VAT /year" } },
+            { "service": { "Italiano": "Integrazione sistemi gestionali", "English": "Management systems integration" }, "cost": { "Italiano": "Prezzo su analisi", "English": "Price on analysis" } },
+            { "service": { "Italiano": "Accesso semplificato (cartelle/DB)", "English": "Simplified access (folders/DB)" }, "cost": { "Italiano": "Gratuito", "English": "Free" } },
+            { "service": { "Italiano": "Interrogazione AI documenti", "English": "AI document query" }, "cost": { "Italiano": "€0,12 + IVA /pagina", "English": "€0.12 + VAT /page" } }
+          ]
+        },
+        {
+          "id": "scenario2",
+          "title": { "Italiano": "Scenario 2 – Fornitori Integrati (API o MCP)", "English": "Scenario 2 – Integrated Suppliers (API or MCP)" },
+          "description": {
+            "Italiano": "Il ricevente ottiene i dati da fornitori già integrati nella piattaforma, tramite API dirette o protocollo MCP. Le informazioni sono già strutturate e accessibili tramite QR code.",
+            "English": "The receiver gets data from suppliers already integrated into the platform, via direct APIs or MCP protocol. The information is already structured and accessible via QR code."
+          },
+          "tiers": [
+            { "service": { "Italiano": "Sottoscrizione piattaforma SYD", "English": "SYD platform subscription" }, "cost": { "Italiano": "€270 + IVA /anno", "English": "€270 + VAT /year" } },
+            { "service": { "Italiano": "Integrazione sistemi gestionali", "English": "Management systems integration" }, "cost": { "Italiano": "Prezzo su analisi", "English": "Price on analysis" } },
+            { "service": { "Italiano": "Accesso semplificato (cartelle/DB)", "English": "Simplified access (folders/DB)" }, "cost": { "Italiano": "Gratuito", "English": "Free" } },
+            { "service": { "Italiano": "Chiamata API via QR code", "English": "API call via QR code" }, "cost": { "Italiano": "€0,03 – €0,05 /chiamata", "English": "€0.03 – €0.05 /call" } }
+          ]
+        }
+      ],
+      "dataProducer": {
+        "title": { "Italiano": "DATA PRODUCER", "English": "DATA PRODUCER" },
+        "subtitle": { "Italiano": "Coinvolgimento Data Producer – Fase 1 (Accesso Semplice)", "English": "Data Producer Involvement – Phase 1 (Simple Access)" },
+        "descriptionTitle": { "Italiano": "I fornitori possono iniziare subito senza sviluppi tecnici:", "English": "Suppliers can start immediately without technical developments:" },
+        "descriptionPoints": [
+            { "Italiano": "Login sulla piattaforma SYD", "English": "Login to the SYD platform" },
+            { "Italiano": "Upload documenti manuale o automatico (cartelle condivise, scanner, upload diretto)", "English": "Manual or automatic document upload (shared folders, scanner, direct upload)" },
+            { "Italiano": "I dati diventano interrogabili per i riceventi (Data Subscriber)", "English": "Data becomes queryable for recipients (Data Subscribers)" }
+        ],
+        "benefitTitle": { "Italiano": "Beneficio immediato:", "English": "Immediate Benefit:" },
+        "benefitDescription": { "Italiano": "Il Data Producer riceve una fee del 10% ogni volta che i suoi dati vengono interrogati tramite AI", "English": "The Data Producer receives a 10% fee each time their data is queried via AI" },
+        "benefitChecklist": [
+            { "Italiano": "Nessun costo di attivazione", "English": "No activation cost" },
+            { "Italiano": "Guadagno immediato", "English": "Immediate earnings" },
+            { "Italiano": "Percorso naturale verso un futuro upgrade (API / MCP)", "English": "Natural path towards a future upgrade (API / MCP)" }
+        ]
+      },
+      "sydAgent": {
+        "title": { "Italiano": "SYD Agent", "English": "SYD Agent" },
+        "subtitle": { "Italiano": "Modulo Aggiuntivo – Assistente BI AI", "English": "Add-on Module – AI BI Assistant" },
+        "plans": [
+          {
+            "plan": { "Italiano": "Starter", "English": "Starter" },
+            "price": { "Italiano": "€273", "English": "€273" },
+            "configuration": { "Italiano": "Inclusa", "English": "Included" },
+            "companySize": { "Italiano": "5-20 persone", "English": "5-20 people" },
+            "includes": { "Italiano": "Analisi operative pronte all'uso", "English": "Ready-to-use operational analysis" }
+          },
+          {
+            "plan": { "Italiano": "Professional", "English": "Professional" },
+            "price": { "Italiano": "€507", "English": "€507" },
+            "configuration": { "Italiano": "Inclusa", "English": "Included" },
+            "companySize": { "Italiano": "20-50 persone", "English": "20-50 people" },
+            "includes": { "Italiano": "Insight avanzati + onboarding prioritario", "English": "Advanced insights + priority onboarding" }
+          },
+          {
+            "plan": { "Italiano": "Enterprise", "English": "Enterprise" },
+            "price": { "Italiano": "€931", "English": "€931" },
+            "configuration": { "Italiano": "Inclusa", "English": "Included" },
+            "companySize": { "Italiano": "50+ persone", "English": "50+ people" },
+            "includes": { "Italiano": "Piattaforma completa + supporto dedicato immediato", "English": "Complete platform + immediate dedicated support" }
+          }
+        ],
+        "additionalServicesTitle": { "Italiano": "Servizi Aggiuntivi (Facoltativi)", "English": "Additional Services (Optional)" },
+        "additionalServices": [
+          {
+            "service": { "Italiano": "Pulizia dati complessa", "English": "Complex data cleaning" },
+            "when": { "Italiano": "Dati estremamente disordinati", "English": "Extremely messy data" },
+            "cost": { "Italiano": "€200/mese (per 3 mesi)", "English": "€200/month (for 3 months)" }
+          },
+          {
+            "service": { "Italiano": "Supporto Premium", "English": "Premium Support" },
+            "when": { "Italiano": "Assistenza illimitata", "English": "Unlimited assistance" },
+            "cost": { "Italiano": "€99/mese", "English": "€99/month" }
+          },
+          {
+            "service": { "Italiano": "Formazione al Team", "English": "Team Training" },
+            "when": { "Italiano": "Onboarding del personale", "English": "Staff onboarding" },
+            "cost": { "Italiano": "€150/ora", "English": "€150/hour" }
+          }
+        ]
+      },
+      "actions": [
+        { "label": { "Italiano": "Torna alla Home", "English": "Back to Home" }, "action": "next", "target": "start" }
+      ]
+    },
+    {
+      "id": "final_summary",
+      "type": "summary",
+      "text": {
+        "Italiano": "Tutto sotto controllo\nLotti, scadenze, schede tecniche pronte all'uso.\nCelerya: integra, semplifica, monetizza.",
+        "English": "Everything under control\nLots, expiries, and technical sheets ready to use.\nCelerya: integrate, simplify, monetize."
+      },
+      "actions": [
+        { "label": { "Italiano": "Ricomincia", "English": "Restart" }, "action": "next", "target": "start" }
+      ]
+    }
+  ]
+};
+
+// --- Contenuto da components/Icons.tsx ---
+const UploadIcon = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l-3.75 3.75M12 9.75l3.75 3.75M3.75 12h16.5m-16.5 3.75h16.5A2.25 2.25 0 0022.5 12v-1.5A2.25 2.25 0 0020.25 8.25H3.75A2.25 2.25 0 001.5 10.5v1.5A2.25 2.25 0 003.75 15.75z" />
+  </svg>
+);
+const CloudIcon = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+  </svg>
+);
+const ChipIcon = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M14.25 6.087c0-.595.484-1.087 1.088-1.087h.001a1.088 1.088 0 011.087 1.087v.002a1.088 1.088 0 01-1.087 1.087h-.001A1.088 1.088 0 0114.25 6.087zM17.25 12c0-.595.484-1.087 1.088-1.087h.001a1.088 1.088 0 011.087 1.087v.002a1.088 1.088 0 01-1.087 1.087h-.001A1.088 1.088 0 0117.25 12zM4.5 6.087c0-.595.484-1.087 1.088-1.087h.001a1.088 1.088 0 011.087 1.087v.002a1.088 1.088 0 01-1.087 1.087H5.588A1.088 1.088 0 014.5 6.087zM7.5 12c0-.595.484-1.087 1.088-1.087h.001a1.088 1.088 0 011.087 1.087v.002a1.088 1.088 0 01-1.087 1.087H8.588A1.088 1.088 0 017.5 12zM10.5 17.913c0-.595.484-1.087 1.088-1.087h.001a1.088 1.088 0 011.087 1.087v.002a1.088 1.088 0 01-1.087 1.087h-.001a1.088 1.088 0 01-1.088-1.087zM3.75 4.5A2.25 2.25 0 001.5 6.75v10.5A2.25 2.25 0 003.75 19.5h16.5A2.25 2.25 0 0022.5 17.25V6.75A2.25 2.25 0 0020.25 4.5H3.75z" />
+  </svg>
+);
+const CheckCircleIcon = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+);
+const SparklesIcon = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.898 20.572L16.5 21.75l-.398-1.178a3.375 3.375 0 00-2.456-2.456L12.5 17.25l1.178-.398a3.375 3.375 0 002.456-2.456L16.5 13.5l.398 1.178a3.375 3.375 0 002.456 2.456l1.178.398-1.178.398a3.375 3.375 0 00-2.456 2.456z" />
+    </svg>
+);
+const DashboardIcon = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v18h16.5V3H3.75zM8.25 21V12h3v9H8.25zM15.75 21V9h3v12h-3z" />
+    </svg>
+);
+const Squares2X2Icon = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
+    </svg>
+);
+const ChevronLeftIcon = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+    </svg>
+);
+const ChevronRightIcon = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+    </svg>
+);
+const PlayIcon = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+    </svg>
+);
+const PauseIcon = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25v13.5m-6-13.5v13.5" />
+    </svg>
+);
+
+
+// --- Contenuto da components/LanguageSelector.tsx ---
+const LanguageSelector = ({ languages, selectedLanguage, onSelectLanguage }) => {
+  return (
+    <div className="bg-gray-100/80 rounded-full p-1 backdrop-blur-sm">
+      <div className="flex items-center space-x-1">
+        {languages.map((lang) => {
+          const isSelected = selectedLanguage === lang;
+          return (
+            <button
+              key={lang}
+              onClick={() => onSelectLanguage(lang)}
+              className={`px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-[#3B74B8] ${
+                !isSelected && 'text-slate-600 hover:bg-gray-200'
+              }`}
+              style={{
+                backgroundColor: isSelected ? '#3B74B8' : 'transparent',
+                color: isSelected ? 'white' : undefined,
+              }}
+            >
+              {lang}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// --- Contenuto da components/TitleScreen.tsx ---
+const TitleScreen = ({ text, actions, onNavigate, language }) => {
+  const [title, subtitle, slogan] = text.split('\n');
+
+  const handleAction = (action) => {
+    if (action.action === 'next' && action.target) {
+      onNavigate(action.target);
+    }
+  };
+
+  const mainTitle = title.replace('®', '');
+
+  return (
+    <div className="text-center flex flex-col items-center justify-center min-h-[400px] p-4 animate-fade-in">
+      <div className="relative inline-block">
+        <h1 className="text-8xl md:text-9xl font-bold" style={{ color: '#2D5F9D' }}>
+          {mainTitle}
+          <sup className="text-4xl md:text-5xl top-[-2.5em] ml-2">®</sup>
+        </h1>
+        <div 
+          className="w-full h-1 absolute -bottom-1"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3csvg width='40' height='3' viewBox='0 0 40 3' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M0.333984 1.5C5.33398 1.5 5.33398 -0.499999 10.334 1.5C15.334 3.5 15.334 1.5 20.334 1.5C25.334 -0.5 25.334 1.5 30.334 1.5C35.334 3.5 35.334 1.5 40.334 1.5' stroke='%23E6332A' stroke-width='1.2'/%3e%3c/svg%3e")`,
+            backgroundSize: '20px 3px',
+            backgroundRepeat: 'repeat-x',
+          }}
+        ></div>
+      </div>
+      
+      <p className="text-4xl md:text-5xl text-slate-600 mt-12 mb-6">
+        {subtitle}
+      </p>
+
+      {slogan && (
+        <p className="text-3xl md:text-4xl text-slate-500 italic mb-20">
+          "{slogan}"
+        </p>
+      )}
+
+      <div className="flex flex-wrap items-center justify-center gap-6 mt-12">
+        {actions.map((action) => (
+          <button 
+            key={action.target}
+            onClick={() => handleAction(action)}
+            className="min-w-[240px] flex items-center justify-center px-10 py-5 text-white font-bold text-2xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8]"
+            style={{ 
+              backgroundColor: '#3B74B8', 
+              boxShadow: '0 10px 15px -3px rgba(59, 116, 184, 0.3), 0 4px 6px -2px rgba(59, 116, 184, 0.2)',
+            }}
+          >
+            {action.label[language]}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// --- Contenuto da components/SummaryScreen.tsx ---
+const SummaryScreen = ({ text, actions, onNavigate, language }) => {
+  const [title, ...descriptionParts] = text.split('\n');
+  const lastLine = descriptionParts.length > 1 ? descriptionParts.pop() : '';
+
+  const handleAction = (action) => {
+    if ((action.action === 'restart' || action.action === 'next') && action.target) {
+        onNavigate(action.target);
+    }
+  };
+
+  return (
+    <div className="bg-white border border-gray-200/90 rounded-2xl shadow-xl p-8 md:p-12 flex flex-col items-center text-center animate-slide-up-fade">
+      <div className="mb-8 bg-green-100 p-6 rounded-full">
+        <CheckCircleIcon className="h-24 w-24 text-green-500" />
+      </div>
+      <h2 className="text-6xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+        {title} {actions.length === 1 && <SparklesIcon className="h-10 w-10 text-yellow-400" />}
+      </h2>
+      <p className="text-slate-500 max-w-lg mb-8 whitespace-pre-line text-2xl">{descriptionParts.join('\n')}</p>
+      {lastLine && <p className="text-3xl font-semibold max-w-lg mb-12" style={{color: '#2D5F9D'}}>{lastLine}</p>}
+
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-4">
+        {actions.map((action, index) => (
+          <button
+            key={index}
+            onClick={() => handleAction(action)}
+            className="px-10 py-4 text-xl font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8]"
+            style={{ 
+              backgroundColor: '#3B74B8',
+              color: 'white',
+              boxShadow: '0 10px 15px -3px rgba(59, 116, 184, 0.3), 0 4px 6px -2px rgba(59, 116, 184, 0.2)',
+            }}
+          >
+            {action.label[language]}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// --- Contenuto da components/PresentationScreen.tsx ---
+const PresentationScreen = ({ steps, next, onNavigate, language }) => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const [progressKey, setProgressKey] = useState(0); // To reset animation
+
+  const DURATION_PER_STEP = 5000; // 5 seconds
+
+  const StepVisual = ({ id, language }) => {
+    const visualContainerClasses = "w-full lg:w-2/5 flex items-center justify-center p-8 min-h-[350px]";
+    
+    switch (id) {
+        case 'why_step1':
+            return (
+                <div className={visualContainerClasses}>
+                    <div className="relative w-64 h-64">
+                        <div className="absolute top-1/2 left-0 w-full h-0.5 bg-slate-300 rounded-full animate-fade-in" />
+                        <div className="absolute top-1/2 left-1/2 w-32 h-32 border-2 border-slate-300 rounded-full -translate-x-1/2 -translate-y-1/2 animate-fade-in" style={{animationDelay: '100ms'}} />
+                        <div className="absolute top-1/4 left-1/4 w-16 h-16 bg-sky-200/50 rounded-full animate-fade-in" style={{animationDelay: '200ms'}}/>
+                        <div className="absolute bottom-1/4 right-1/4 w-12 h-12 bg-red-200/50 rounded-full animate-fade-in" style={{animationDelay: '300ms'}} />
+                    </div>
+                </div>
+            );
+        case 'why_step2':
+            return (
+                <div className={visualContainerClasses}>
+                    <div className="text-center p-6 rounded-lg bg-red-50/50 border border-red-200/50 shadow-inner">
+                        <div className="text-9xl font-bold" style={{color: '#D0342C'}}>80%</div>
+                        <p className="text-xl text-slate-600 mt-2 max-w-xs">{language === 'Italiano' ? 'delle aziende si affida a processi manuali' : 'of companies rely on manual processes'}</p>
+                    </div>
+                </div>
+            );
+        case 'why_step3':
+            return (
+                 <div className={`${visualContainerClasses} perspective-1000`}>
+                    <div className="relative w-64 h-32 transform-style-3d rotate-x-10 -rotate-y-20">
+                        {[...Array(8)].map((_, i) => (
+                            <div 
+                                key={i} 
+                                className="absolute w-full h-24 bg-white border border-slate-300 rounded-md shadow-md"
+                                style={{ 
+                                    transform: `translateZ(-${i * 4}px) translateY(${i * 4}px)`,
+                                    opacity: 1 - i * 0.1,
+                                }}
+                            ></div>
+                        ))}
+                        <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-lg font-semibold text-slate-600 italic">"Sommerso di scartoffie!"</p>
+                    </div>
+                </div>
+            );
+        case 'why_step4':
+             return (
+                <div className={`${visualContainerClasses} flex-col sm:flex-row gap-8`}>
+                    <div className="text-center p-6 rounded-lg bg-slate-50 border shadow-inner">
+                        <div className="text-7xl font-bold" style={{color: '#D0342C'}}>+60%</div>
+                        <p className="text-xl text-slate-600 mt-2">{language === 'Italiano' ? 'Costi' : 'Costs'}</p>
+                    </div>
+                    <div className="text-center p-6 rounded-lg bg-slate-50 border shadow-inner">
+                        <div className="text-7xl font-bold" style={{color: '#D0342C'}}>-20%</div>
+                        <p className="text-xl text-slate-600 mt-2">ROI</p>
+                    </div>
+                </div>
+            );
+        case 'step1': // Manual Upload
+            return (
+                <div className={visualContainerClasses}>
+                   <div className="flex items-center gap-4">
+                       <div className="w-24 h-32 bg-white border-2 border-slate-300 rounded-md p-2 flex flex-col gap-2">
+                            <div className="w-full h-2 bg-slate-200 rounded-sm"></div>
+                            <div className="w-5/6 h-2 bg-slate-200 rounded-sm"></div>
+                            <div className="w-full h-2 bg-slate-200 rounded-sm"></div>
+                            <div className="w-2/3 h-2 bg-slate-200 rounded-sm"></div>
+                       </div>
+                       <div className="text-5xl font-light text-slate-400">→</div>
+                       <div className="w-40 h-24 bg-sky-100 border-2 border-dashed border-sky-400 rounded-lg flex items-center justify-center text-sky-600 font-bold text-lg">
+                           Celerya
+                       </div>
+                   </div>
+                </div>
+            );
+        case 'step2': // Shared Folders
+            return (
+                <div className={visualContainerClasses}>
+                   <div className="flex items-center gap-6">
+                        <div className="relative w-32 h-24">
+                            <div className="absolute -bottom-2 -right-2 w-24 h-20 bg-blue-300/80 rounded-full"></div>
+                            <div className="absolute -bottom-1 -left-4 w-20 h-16 bg-blue-300/80 rounded-full"></div>
+                            <div className="absolute w-full h-full bg-blue-400/80 rounded-full z-10"></div>
+                        </div>
+                       <div className="text-5xl font-light text-slate-400">→</div>
+                       <div className="w-40 h-24 bg-sky-100 border-2 border-sky-400 rounded-lg flex items-center justify-center text-sky-600 font-bold text-lg">
+                           Celerya
+                       </div>
+                   </div>
+                </div>
+            );
+        case 'step3': // System Integration
+            return (
+                 <div className={visualContainerClasses}>
+                   <div className="flex items-center gap-2">
+                       <div className="w-32 h-20 bg-slate-200 rounded-lg flex items-center justify-center text-slate-600 font-semibold p-2 text-center">Your System</div>
+                       <div className="w-16 h-1 bg-slate-400 relative">
+                            <div className="absolute w-2 h-2 rounded-full bg-slate-500 top-1/2 -translate-y-1/2 left-0 animate-ping"></div>
+                            <div className="absolute w-2 h-2 rounded-full bg-slate-500 top-1/2 -translate-y-1/2 right-0 animate-ping" style={{animationDelay: '0.5s'}}></div>
+                       </div>
+                       <div className="w-32 h-20 bg-sky-100 border-2 border-sky-400 rounded-lg flex items-center justify-center text-sky-600 font-bold text-lg p-2 text-center">
+                           Celerya
+                       </div>
+                   </div>
+                </div>
+            );
+        case 'dashboard_step': // Dashboard
+            return (
+                <div className={visualContainerClasses}>
+                    <div className="w-80 h-56 bg-white rounded-lg p-4 shadow-lg border border-slate-200 grid grid-cols-2 gap-3">
+                        <div className="bg-sky-200 rounded p-2 text-xs text-sky-800 flex flex-col justify-between">
+                            <span className="font-bold">Sales</span>
+                            <div className="w-full h-8 bg-sky-300/50 rounded mt-1"></div>
+                        </div>
+                        <div className="bg-green-200 rounded p-2 text-xs text-green-800 flex flex-col items-center justify-center">
+                           <span className="font-bold text-sm">Efficiency</span>
+                           <span className="text-3xl font-bold mt-1">98%</span>
+                        </div>
+                        <div className="bg-yellow-100 rounded p-2 col-span-2 text-xs text-yellow-800">
+                            <span className="font-bold">Activity Log</span>
+                            <div className="w-full h-1 bg-yellow-300/50 rounded-sm mt-2"></div>
+                            <div className="w-3/4 h-1 bg-yellow-300/50 rounded-sm mt-1"></div>
+                        </div>
+                    </div>
+                </div>
+            );
+        default:
+            return <div className={visualContainerClasses}></div>;
+    }
+  };
+
+  useEffect(() => {
+    if (isPaused) {
+      return;
+    }
+    const timer = setTimeout(() => {
+      if (activeIndex < steps.length - 1) {
+        setActiveIndex(prevIndex => prevIndex + 1);
+        setProgressKey(k => k + 1);
+      } else if (next) {
+        onNavigate(next);
+      }
+    }, DURATION_PER_STEP);
+
+    return () => clearTimeout(timer);
+  }, [activeIndex, isPaused, steps.length, next, onNavigate]);
+
+  const handlePrevClick = () => {
+    if (activeIndex > 0) {
+        setIsPaused(true);
+        setActiveIndex(i => i - 1);
+        setProgressKey(k => k + 1);
+    }
+  };
+
+  const handleNextClick = () => {
+    setIsPaused(true);
+    if (activeIndex < steps.length - 1) {
+        setActiveIndex(i => i + 1);
+        setProgressKey(k => k + 1);
+    } else if (next) {
+        onNavigate(next);
+    }
+  };
+
+  const togglePlayPause = () => {
+    if (isPaused) {
+        setProgressKey(k => k + 1); // Reset animation when resuming
+    }
+    setIsPaused(p => !p);
+  };
+
+  const activeStep = steps[activeIndex];
+  if (!activeStep) return null;
+
+  const [title, ...descriptionParts] = activeStep.text[language].split('\n');
+  const description = descriptionParts.join('\n');
+
+  return (
+    <div className="flex flex-col justify-center items-center p-4 w-full min-h-[calc(100vh-100px)]">
+      {/* Progress Bars */}
+      <div className="flex gap-2.5 mb-12 w-full max-w-2xl">
+        {steps.map((_, index) => (
+          <div key={index} className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+            {index < activeIndex && <div className="bg-[#3B74B8] h-full rounded-full w-full"></div>}
+            {index === activeIndex && 
+              <div 
+                key={`${activeIndex}-${progressKey}`}
+                className="bg-[#3B74B8] h-full rounded-full" 
+                style={{
+                    animation: `progress-bar-animation ${DURATION_PER_STEP}ms linear`,
+                    animationPlayState: isPaused ? 'paused' : 'running',
+                }}>
+              </div>
+            }
+          </div>
+        ))}
+      </div>
+
+      {/* Animated Content */}
+      <div key={activeIndex} className="flex flex-col-reverse lg:flex-row items-center justify-center animate-slide-up-fade w-full max-w-6xl mx-auto flex-grow">
+        {/* Text Content */}
+        <div className="w-full lg:w-3/5 text-center lg:text-left p-4 md:p-8">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-800 mb-6">{title}</h2>
+            <p className="text-xl md:text-2xl text-slate-600 max-w-2xl mx-auto lg:mx-0">{description}</p>
+        </div>
+        
+        {/* Visual Content */}
+        <StepVisual id={activeStep.id} language={language} />
+      </div>
+
+      {/* Navigation Controls */}
+      <div className="flex items-center justify-center gap-6 sm:gap-8 mt-12 text-slate-500">
+        <button 
+          onClick={handlePrevClick} 
+          disabled={activeIndex === 0} 
+          className="p-2 rounded-full hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          aria-label="Previous step"
+        >
+          <ChevronLeftIcon className="h-7 w-7" />
+        </button>
+        <button 
+          onClick={togglePlayPause} 
+          className="p-3 rounded-full hover:bg-slate-200/70 transition-colors bg-white shadow-lg"
+          aria-label={isPaused ? 'Play' : 'Pause'}
+        >
+            {isPaused ? <PlayIcon className="h-9 w-9 text-[#3B74B8] -mr-1" /> : <PauseIcon className="h-9 w-9 text-[#3B74B8]" />}
+        </button>
+        <button 
+          onClick={handleNextClick} 
+          className="p-2 rounded-full hover:bg-slate-100 transition-colors"
+          aria-label="Next step"
+        >
+          <ChevronRightIcon className="h-7 w-7" />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// --- Contenuto da components/PricingScreen.tsx ---
+const PricingScreen = ({ text, scenarios, sydAgent, dataProducer, actions, onNavigate, language }) => {
+  const [activeTab, setActiveTab] = useState(scenarios[0]?.id || '');
+  const [title, subtitle] = text.split('\n');
+  const activeScenario = scenarios.find(s => s.id === activeTab);
+
+  const handleAction = (action) => {
+    if (action.action === 'next' && action.target) {
+      onNavigate(action.target);
+    }
+  };
+
+  return (
+    <div className="flex flex-col w-full p-4 animate-fade-in">
+      <div className="text-center mb-16">
+        <h1 className="text-7xl md:text-8xl font-bold" style={{ color: '#2D5F9D' }}>
+          {title}
+        </h1>
+        {subtitle && <p className="text-3xl md:text-4xl text-slate-600 mt-5">{subtitle}</p>}
+      </div>
+
+      {/* DATA SUBSCRIBER SECTION */}
+      <div className="animate-fade-in">
+        <div className="text-center mb-8">
+            <h2 className="text-5xl md:text-6xl font-bold" style={{ color: '#2D5F9D' }}>
+              DATA SUBSCRIBER
+            </h2>
+        </div>
+        <div className="flex justify-center border-b border-gray-200 mb-8">
+            {scenarios.map(scenario => (
+            <button
+                key={scenario.id}
+                onClick={() => setActiveTab(scenario.id)}
+                className={`px-6 py-3 text-lg md:text-xl font-semibold transition-colors duration-200 border-b-2 -mb-px ${
+                activeTab === scenario.id
+                    ? 'border-[#3B74B8] text-[#3B74B8]'
+                    : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-gray-300'
+                }`}
+            >
+                {scenario.title[language].split('–')[0].trim()}
+            </button>
+            ))}
+        </div>
+
+        <div className="w-full">
+            {activeScenario && (
+            <div key={activeScenario.id} className="animate-fade-in-fast">
+                <h3 className="text-4xl font-bold text-slate-800 text-center mb-4">{activeScenario.title[language]}</h3>
+                <p className="text-slate-600 text-center max-w-3xl mx-auto mb-10 text-xl">{activeScenario.description[language]}</p>
+                
+                <div className="border border-gray-200 rounded-lg shadow-md overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                    <thead style={{ backgroundColor: '#3B74B8' }}>
+                    <tr>
+                        <th scope="col" className="px-8 py-5 text-left text-base font-bold text-white uppercase tracking-wider">
+                        {language === 'Italiano' ? 'Servizio' : 'Service'}
+                        </th>
+                        <th scope="col" className="px-8 py-5 text-left text-base font-bold text-white uppercase tracking-wider">
+                        {language === 'Italiano' ? 'Costo' : 'Cost'}
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                    {activeScenario.tiers.map((tier, index) => (
+                        <tr key={index} className="odd:bg-white even:bg-slate-50/70">
+                        <td className="px-8 py-5 whitespace-nowrap text-lg font-medium text-slate-800">{tier.service[language]}</td>
+                        <td className="px-8 py-5 whitespace-nowrap text-lg text-slate-600">{tier.cost[language]}</td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
+                </div>
+            </div>
+            )}
+        </div>
+      </div>
+
+      {/* DATA PRODUCER SECTION */}
+      {dataProducer && (
+        <div className="mt-20 animate-fade-in">
+          <div className="text-center mb-12">
+            <h2 className="text-5xl md:text-6xl font-bold" style={{ color: '#2D5F9D' }}>
+              {dataProducer.title[language]}
+            </h2>
+            <p className="text-3xl md:text-4xl text-slate-600 mt-5">{dataProducer.subtitle[language]}</p>
+          </div>
+          
+          <div className="max-w-4xl mx-auto px-4 text-left">
+            <div className="space-y-4 text-slate-700 text-xl mb-10">
+              <p className="font-semibold">{dataProducer.descriptionTitle[language]}</p>
+              <div className="pl-6 space-y-4 mt-5">
+                {dataProducer.descriptionPoints.map((point, index) => (
+                  <p key={index}>{point[language]}</p>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-10">
+                <p className="text-xl font-semibold text-slate-800">{dataProducer.benefitTitle[language]}</p>
+                <p className="text-2xl font-bold mt-3" style={{color: '#3B74B8'}}>{dataProducer.benefitDescription[language]}</p>
+            </div>
+            
+            <ul className="space-y-4">
+              {dataProducer.benefitChecklist.map((item, index) => (
+                <li key={index} className="flex items-start text-xl">
+                    <CheckCircleIcon className="h-8 w-8 text-green-500 mr-4 mt-1 flex-shrink-0" />
+                    <span className="text-slate-700">{item[language]}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
+      {/* SYD AGENT SECTION */}
+      {sydAgent && (
+        <div className="mt-20 animate-fade-in">
+            <div className="text-center mb-12">
+                <h2 className="text-5xl md:text-6xl font-bold" style={{ color: '#2D5F9D' }}>
+                    {sydAgent.title[language]}
+                </h2>
+                <p className="text-3xl md:text-4xl text-slate-600 mt-4">{sydAgent.subtitle[language]}</p>
+            </div>
+            
+            <div className="border border-gray-200 rounded-lg shadow-md overflow-x-auto mb-14">
+                <table className="min-w-full divide-y divide-gray-200">
+                    <thead style={{ backgroundColor: '#3B74B8' }}>
+                        <tr>
+                            <th scope="col" className="px-8 py-5 text-left text-base font-bold text-white uppercase tracking-wider">{language === 'Italiano' ? 'Piano' : 'Plan'}</th>
+                            <th scope="col" className="px-8 py-5 text-left text-base font-bold text-white uppercase tracking-wider">{language === 'Italiano' ? 'Prezzo Mensile' : 'Monthly Price'}</th>
+                            <th scope="col" className="px-8 py-5 text-left text-base font-bold text-white uppercase tracking-wider">{language === 'Italiano' ? 'Configurazione' : 'Configuration'}</th>
+                            <th scope="col" className="px-8 py-5 text-left text-base font-bold text-white uppercase tracking-wider">{language === 'Italiano' ? 'Dimensione Azienda' : 'Company Size'}</th>
+                            <th scope="col" className="px-8 py-5 text-left text-base font-bold text-white uppercase tracking-wider">{language === 'Italiano' ? 'Cosa Include Subito' : 'What\'s Included'}</th>
+                        </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                        {sydAgent.plans.map((plan, index) => (
+                            <tr key={index} className="odd:bg-white even:bg-slate-50/70">
+                                <td className="px-8 py-5 whitespace-nowrap text-lg font-medium text-slate-800">{plan.plan[language]}</td>
+                                <td className="px-8 py-5 whitespace-nowrap text-lg text-slate-600">{plan.price[language]}</td>
+                                <td className="px-8 py-5 whitespace-nowrap text-lg text-slate-600">{plan.configuration[language]}</td>
+                                <td className="px-8 py-5 whitespace-nowrap text-lg text-slate-600">{plan.companySize[language]}</td>
+                                <td className="px-8 py-5 whitespace-normal text-lg text-slate-600">{plan.includes[language]}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            <div className="text-center mb-8">
+                <h3 className="text-3xl font-bold text-slate-800">{sydAgent.additionalServicesTitle[language]}</h3>
+            </div>
+            <div className="border border-gray-200 rounded-lg shadow-md overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                    <thead style={{ backgroundColor: '#3B74B8' }}>
+                        <tr>
+                            <th scope="col" className="px-8 py-5 text-left text-base font-bold text-white uppercase tracking-wider">{language === 'Italiano' ? 'Servizio' : 'Service'}</th>
+                            <th scope="col" className="px-8 py-5 text-left text-base font-bold text-white uppercase tracking-wider">{language === 'Italiano' ? 'Quando Serve' : 'When Needed'}</th>
+                            <th scope="col" className="px-8 py-5 text-left text-base font-bold text-white uppercase tracking-wider">{language === 'Italiano' ? 'Costo' : 'Cost'}</th>
+                        </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                        {sydAgent.additionalServices.map((service, index) => (
+                            <tr key={index} className="odd:bg-white even:bg-slate-50/70">
+                                <td className="px-8 py-5 whitespace-nowrap text-lg font-medium text-slate-800">{service.service[language]}</td>
+                                <td className="px-8 py-5 whitespace-nowrap text-lg text-slate-600">{service.when[language]}</td>
+                                <td className="px-8 py-5 whitespace-nowrap text-lg text-slate-600">{service.cost[language]}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+      )}
+
+      {/* Savings Section */}
+      <div className="mt-20 animate-fade-in">
+          <div className="max-w-4xl mx-auto bg-sky-50/70 border border-sky-200 rounded-2xl p-8 shadow-md">
+              <h3 className="text-3xl font-bold text-center mb-6" style={{ color: '#2D5F9D' }}>
+                  💡 {language === 'Italiano' ? 'Risparmio rispetto all’elaborazione AI' : 'Savings Compared to AI Processing'}
+              </h3>
+              <p className="text-center text-slate-600 text-lg mb-8">
+                  {language === 'Italiano' ? 'Confronto su 1 scheda tecnica (3 pagine):' : 'Comparison for 1 technical sheet (3 pages):'}
+              </p>
+              <div className="flex flex-col md:flex-row justify-center gap-8 text-center">
+                  <div className="bg-white p-6 rounded-lg border border-gray-200 flex-1 shadow-sm">
+                      <p className="font-semibold text-slate-700">AI (Scenario 1)</p>
+                      <p className="text-4xl font-bold text-slate-800 mt-2">€0,36</p>
+                      <p className="text-slate-500 text-sm">({language === 'Italiano' ? '0,12 €/pagina' : '€0.12/page'})</p>
+                  </div>
+                  <div className="bg-white p-6 rounded-lg border border-gray-200 flex-1 shadow-sm">
+                      <p className="font-semibold text-slate-700">API (Scenario 2)</p>
+                      <p className="text-4xl font-bold text-slate-800 mt-2">€0,03 – €0,05</p>
+                      <p className="text-slate-500 text-sm">({language === 'Italiano' ? 'chiamata a dati strutturati' : 'call to structured data'})</p>
+                  </div>
+              </div>
+              <div className="text-center mt-8">
+                  <p className="text-xl font-semibold text-green-700 bg-green-100/80 inline-block px-4 py-2 rounded-full border border-green-200">
+                      {language === 'Italiano' ? 'Risparmio stimato: ~85–92%' : 'Estimated savings: ~85–92%'}
+                  </p>
+                  <p className="text-slate-700 mt-5 text-lg font-medium">
+                      → {language === 'Italiano' ? 'Accesso immediato e maggiore affidabilità' : 'Immediate access and greater reliability'}
+                  </p>
+              </div>
+          </div>
+      </div>
+
+      <div className="flex flex-col items-center justify-center gap-4 mt-16">
+        {actions.map((action, index) => (
+          <button
+            key={index}
+            onClick={() => handleAction(action)}
+            className="px-10 py-4 text-xl font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8]"
+            style={{ 
+              backgroundColor: '#3B74B8',
+              color: 'white',
+              boxShadow: '0 10px 15px -3px rgba(59, 116, 184, 0.3), 0 4px 6px -2px rgba(59, 116, 184, 0.2)',
+            }}
+          >
+            {action.label[language]}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// --- Contenuto da components/EcosystemScreen.tsx ---
+const EcosystemScreen = ({ ecosystem, language, actions, onNavigate }) => {
+  if (!ecosystem) return null;
+  
+  const handleAction = (action) => {
+    if (action.action === 'next' && action.target) {
+      onNavigate(action.target);
+    }
+  };
+
+  return (
+    <div className="w-full mx-auto p-4 sm:p-6 animate-fade-in">
+      <h1 className="text-7xl md:text-8xl font-bold text-center mb-8" style={{ color: '#2D5F9D' }}>
+        {ecosystem.title[language]}
+      </h1>
+      <p 
+        className="text-center text-slate-600 max-w-5xl mx-auto text-2xl mb-16"
+        dangerouslySetInnerHTML={{ __html: ecosystem.subtitle[language] }}
+      />
+
+      {/* SYD Data Gateway Section */}
+      <div className="border border-blue-300 rounded-2xl p-6 md:p-8 relative mb-12 shadow-lg bg-white">
+        <h2 className="absolute -top-6 left-1/2 -translate-x-1/2 bg-white px-4 text-2xl font-semibold border border-blue-300 rounded-lg" style={{color: '#3B74B8'}}>
+          {ecosystem.gatewayTitle[language]}
+        </h2>
+        <div className="flex items-center justify-between gap-4 md:gap-8">
+          {/* Data Producer */}
+          <div className="text-center p-4 py-8 border-2 border-blue-400 rounded-xl shadow-md bg-white flex-1">
+            <h3 className="text-2xl font-semibold" style={{color: '#2D5F9D'}}>{ecosystem.gatewayProducer[language]}</h3>
+          </div>
+          
+          {/* Connector */}
+          <div className="flex items-center">
+             <div className="w-12 h-px bg-blue-400"></div>
+             <div className="mx-8 my-4 p-8 border-2 border-blue-400 rounded-lg shadow-md bg-white" style={{ clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)'}}>
+                 <div className="text-center leading-tight">
+                     <p className="font-bold text-xl" style={{color: '#2D5F9D'}}>CELERYA</p>
+                     <p className="font-semibold text-lg" style={{color: '#2D5F9D'}}>SYD</p>
+                 </div>
+             </div>
+             <div className="w-12 h-px bg-blue-400"></div>
+          </div>
+          
+          {/* Data User */}
+          <div className="text-center p-4 py-8 border-2 border-blue-400 rounded-xl shadow-md bg-white flex-1">
+            <h3 className="text-2xl font-semibold" style={{color: '#2D5F9D'}}>{ecosystem.gatewayUser[language]}</h3>
+          </div>
+        </div>
+      </div>
+      
+      <div className="w-1.5 h-12 bg-black mx-auto"></div>
+
+      {/* Additional/3rd Parties Services Section */}
+      <div className="bg-slate-100/70 rounded-2xl p-6 md:p-8 relative shadow-lg">
+         <h2 className="absolute -top-6 left-1/2 -translate-x-1/2 bg-white px-4 text-2xl font-semibold border-2 border-black rounded-lg text-slate-800">
+          {ecosystem.servicesTitle[language]}
+        </h2>
+        <div className="relative pt-8">
+            <div className="absolute top-0 left-[15%] right-[15%] md:left-[5%] md:right-[5%] h-1.5 bg-black"></div>
+            <div className="flex flex-col md:flex-row justify-around gap-8 relative">
+                {ecosystem.services.map((service, index) => (
+                    <div key={index} className="flex flex-col items-center flex-1 min-w-[200px] z-10">
+                        <div className="w-1.5 h-8 bg-black"></div>
+                        <div className="w-full text-center p-4 rounded-xl shadow-lg" style={{backgroundColor: '#086972'}}>
+                            <h3 className="text-2xl font-bold text-white">{service.title[language]}</h3>
+                        </div>
+                        <p 
+                            className="mt-6 text-slate-700 text-center text-lg"
+                            dangerouslySetInnerHTML={{ __html: service.description[language] }}
+                        />
+                    </div>
+                ))}
+            </div>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-16 flex-wrap">
+        {actions.map((action, index) => (
+          <button
+            key={index}
+            onClick={() => handleAction(action)}
+            className="px-10 py-4 text-xl font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8]"
+            style={{ 
+              backgroundColor: '#3B74B8',
+              color: 'white',
+              boxShadow: '0 10px 15px -3px rgba(59, 116, 184, 0.3), 0 4px 6px -2px rgba(59, 116, 184, 0.2)',
+            }}
+          >
+            {action.label[language]}
+          </button>
+        ))}
+        <a
+          href="https://syd.celerya.com/login"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-10 py-4 text-xl font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8]"
+          style={{ 
+            backgroundColor: '#3B74B8',
+            color: 'white',
+            boxShadow: '0 10px 15px -3px rgba(59, 116, 184, 0.3), 0 4px 6px -2px rgba(59, 116, 184, 0.2)',
+          }}
+        >
+          SYD
+        </a>
+        <a
+          href="https://aistudio.google.com/app/apps/drive/1JTKm_Xu_sI1NQ0kSyFOIP9pqAFH4WGWP?showPreview=true&showCode=true&showAssistant=true"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-10 py-4 text-xl font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8]"
+          style={{ 
+            backgroundColor: '#3B74B8',
+            color: 'white',
+            boxShadow: '0 10px 15px -3px rgba(59, 116, 184, 0.3), 0 4px 6px -2px rgba(59, 116, 184, 0.2)',
+          }}
+        >
+          prototype
+        </a>
+        <a
+          href="https://celeryacom.sharepoint.com/:p:/s/SviluppoCommerciale/EduVN_DwXchJukLVTfxWbzQBZ48Pd4S1Os0W-DSz-8r3LQ?e=iskHch"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-10 py-4 text-xl font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8]"
+          style={{ 
+            backgroundColor: '#3B74B8',
+            color: 'white',
+            boxShadow: '0 10px 15px -3px rgba(59, 116, 184, 0.3), 0 4px 6px -2px rgba(59, 116, 184, 0.2)',
+          }}
+        >
+          Slide
+        </a>
+        <a
+          href="https://chatgpt.com/g/g-rgbSRHU8u-celerya-cvo"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-10 py-4 text-xl font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8]"
+          style={{ 
+            backgroundColor: '#3B74B8',
+            color: 'white',
+            boxShadow: '0 10px 15px -3px rgba(59, 116, 184, 0.3), 0 4px 6px -2px rgba(59, 116, 184, 0.2)',
+          }}
+        >
+          Assistente Virtuale
+        </a>
+      </div>
+    </div>
+  );
+};
+
+// --- Contenuto da App.tsx ---
+const App = () => {
+  const [language, setLanguage] = useState('Italiano');
+  const [currentScreenId, setCurrentScreenId] = useState('start');
+  const [isExiting, setIsExiting] = useState(false);
+
+  const screens = useMemo(() => demoData.screens, []);
+  
+  const currentScreen = useMemo(() => {
+    return screens.find(s => s.id === currentScreenId);
+  }, [currentScreenId, screens]);
+
+  const handleNavigation = useCallback((targetId) => {
+    setIsExiting(true);
+    setTimeout(() => {
+      setCurrentScreenId(targetId);
+      setIsExiting(false);
+    }, 300); // Match animation duration
+  }, []);
+
+  const renderScreen = () => {
+    if (!currentScreen) return null;
+
+    const props = {
+      id: currentScreen.id,
+      text: currentScreen.text[language],
+      actions: currentScreen.actions || [],
+      next: currentScreen.next,
+      steps: currentScreen.steps || [],
+      scenarios: currentScreen.scenarios || [],
+      sydAgent: currentScreen.sydAgent,
+      dataProducer: currentScreen.dataProducer,
+      ecosystem: currentScreen.ecosystem,
+      language,
+      onNavigate: handleNavigation,
+    };
+
+    switch (currentScreen.type) {
+      case 'title':
+        return <TitleScreen {...props} />;
+      case 'presentation':
+        return <PresentationScreen {...props} />;
+      case 'summary':
+        return <SummaryScreen {...props} />;
+      case 'pricing':
+        return <PricingScreen {...props} />;
+      case 'ecosystem':
+        return <EcosystemScreen {...props} ecosystem={props.ecosystem} />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="bg-white text-slate-800 min-h-screen w-full flex flex-col items-center justify-center font-sans relative p-4 sm:p-8">
+      {demoData.languageSelector && (
+        <div className="absolute top-4 right-4 sm:top-8 sm:right-8 z-20">
+          <LanguageSelector
+            languages={demoData.languages}
+            selectedLanguage={language}
+            onSelectLanguage={setLanguage}
+          />
+        </div>
+      )}
+      
+      <main className="w-full max-w-5xl mx-auto z-10">
+        <div 
+          className={`transition-opacity duration-300 ease-in-out w-full ${isExiting ? 'opacity-0' : 'opacity-100'}`}
+          key={currentScreenId}
+          >
+          {renderScreen()}
+        </div>
+      </main>
+    </div>
+  );
+};
+
+// --- Contenuto da index.tsx ---
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  throw new Error("Could not find root element to mount to");
+}
+
+const root = ReactDOM.createRoot(rootElement);
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+// Codice non utilizzato ma presente nei file originali, lo includo per completezza
+// se dovesse servire in futuro.
+
+const ProgressBar = ({ currentStep, totalSteps }) => {
+    if (currentStep === 0 || totalSteps === 0) return null;
+    const progressPercentage = (currentStep / totalSteps) * 100;
+    return (
+        <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+                className="h-2 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${progressPercentage}%`, backgroundColor: '#3B74B8' }}
+            ></div>
+        </div>
+    );
+};
+
+const HubScreen = ({ text, actions, onNavigate, language }) => {
+  const [title, subtitle] = text.split('\n');
+  const mainTitle = title.replace('®', '');
+  const mainActions = actions.filter(a => a.target !== 'start');
+  const backAction = actions.find(a => a.target === 'start');
+  const gridCols = mainActions.length === 1 ? 'sm:grid-cols-1' : 'sm:grid-cols-2';
+  
+  const getIconForTarget = (targetId) => {
+    const iconProps = { 
+        className: "h-10 w-10",
+        style: { color: '#3B74B8' }
+    };
+    switch (targetId) {
+        case 'integrations_hub': return <Squares2X2Icon {...iconProps} />;
+        case 'step1': return <UploadIcon {...iconProps} />;
+        case 'step2': return <CloudIcon {...iconProps} />;
+        case 'step3': return <ChipIcon {...iconProps} />;
+        case 'dashboard': return <DashboardIcon {...iconProps} />;
+        default: return null;
+    }
+  }
+
+  return (
+    <div className="text-center flex flex-col items-center justify-center min-h-[400px] p-4 animate-fade-in">
+        <div className="relative inline-block">
+            <h1 className="text-6xl md:text-7xl font-bold" style={{ color: '#2D5F9D' }}>
+            {mainTitle}
+            <sup className="text-2xl md:text-3xl top-[-1.5em] ml-1">®</sup>
+            </h1>
+            <div 
+            className="w-full h-1 absolute -bottom-1"
+            style={{ backgroundImage: `url("data:image/svg+xml,%3csvg width='40' height='3' viewBox='0 0 40 3' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M0.333984 1.5C5.33398 1.5 5.33398 -0.499999 10.334 1.5C15.334 3.5 15.334 1.5 20.334 1.5C25.334 -0.5 25.334 1.5 30.334 1.5C35.334 3.5 35.334 1.5 40.334 1.5' stroke='%23E6332A' stroke-width='1.2'/%3e%3c/svg%3e")`, backgroundSize: '20px 3px', backgroundRepeat: 'repeat-x' }}
+            ></div>
+        </div>
+        <p className="text-xl md:text-2xl text-slate-600 mt-8 mb-12">{subtitle}</p>
+        <div className={`w-full max-w-lg grid grid-cols-1 ${gridCols} gap-4 md:gap-6`}>
+            {mainActions.map((action, index) => (
+                <button
+                    key={index}
+                    onClick={() => onNavigate(action.target)}
+                    className="group bg-white border border-gray-200/90 rounded-2xl p-6 flex flex-col items-center justify-center text-center shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8]"
+                >
+                    <div className="mb-4 bg-sky-100 p-4 rounded-full transition-colors duration-300 group-hover:bg-blue-100">
+                        {getIconForTarget(action.target)}
+                    </div>
+                    <span className="font-semibold text-slate-700 text-base">{action.label[language]}</span>
+                </button>
+            ))}
+        </div>
+        {backAction && (
+             <button
+                onClick={() => onNavigate(backAction.target)}
+                className="mt-12 px-6 py-2 text-slate-600 font-semibold rounded-full hover:bg-gray-200/80 transition-colors duration-200 text-sm"
+             >
+                {backAction.label[language]}
+            </button>
+        )}
+    </div>
+  );
+};
+
+const InteractiveScreen = ({ id, text, actions, onNavigate, language }) => {
+  const [title, ...descriptionParts] = text.split('\n');
+  const description = descriptionParts.join('\n');
+
+  const handleAction = (action) => {
+    if (action.action === 'next' && action.target) {
+      onNavigate(action.target);
+    }
+  };
+  
+  const getIconForStep = (id) => {
+    const iconProps = { 
+        className: "h-16 w-16",
+        style: { color: '#3B74B8' }
+    };
+    switch (id) {
+        case 'step1': return <UploadIcon {...iconProps} />;
+        case 'step2': return <CloudIcon {...iconProps} />;
+        case 'step3': return <ChipIcon {...iconProps} />;
+        default: return null;
+    }
+  };
+
+  return (
+    <div className="bg-white border border-gray-200/90 rounded-2xl shadow-xl p-8 md:p-12 flex flex-col items-center text-center animate-slide-up-fade">
+        <div className="mb-6 bg-sky-100 p-4 rounded-full">
+            {getIconForStep(id)}
+        </div>
+      <h2 className="text-3xl font-bold text-slate-800 mb-3">{title}</h2>
+      <p className="text-slate-500 max-w-md mb-8">{description}</p>
+      {actions.map((action, index) => (
+        <button
+          key={index}
+          onClick={() => handleAction(action)}
+          className="px-8 py-3 text-white font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8]"
+          style={{ backgroundColor: '#3B74B8', boxShadow: '0 10px 15px -3px rgba(59, 116, 184, 0.3), 0 4px 6px -2px rgba(59, 116, 184, 0.2)'}}
+        >
+          {action.label[language]}
+        </button>
+      ))}
+    </div>
+  );
+};
+    </script>
+  </body>
+</html>
