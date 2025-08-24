@@ -1,4 +1,3 @@
-
 import { DemoData } from '../types.ts';
 
 export const demoData: DemoData = {
@@ -9,16 +8,74 @@ export const demoData: DemoData = {
   "screens": [
     {
       "id": "start",
-      "type": "title",
+      "type": "dashboard",
       "text": {
-        "Italiano": "Celerya®\nGoditi il tuo business.",
-        "English": "Celerya®\nEnjoy your business."
+        "Italiano": "Dashboard\nLa tua Home Intelligente",
+        "English": "Dashboard\nYour Smart Home"
       },
       "actions": [
         { "label": { "Italiano": "Perché Celerya", "English": "Why Celerya" }, "action": "next", "target": "why_presentation" },
         { "label": { "Italiano": "Soluzione", "English": "Solution" }, "action": "next", "target": "ecosystem" },
         { "label": { "Italiano": "Integrazioni", "English": "Integrations" }, "action": "next", "target": "integrations_presentation" },
-        { "label": { "Italiano": "Prezzi", "English": "Pricing" }, "action": "next", "target": "pricing" }
+        { "label": { "Italiano": "Prezzi", "English": "Pricing" }, "action": "next", "target": "pricing" },
+        { "label": { "Italiano": "Applicazioni", "English": "Applications" }, "action": "next", "target": "applications_hub", "color": "green" },
+        { "label": { "Italiano": "Agenda", "English": "Agenda" }, "action": "next", "target": "agenda", "color": "green" },
+        { "label": { "Italiano": "Attività", "English": "Tasks" }, "action": "next", "target": "tasks", "color": "green" }
+      ]
+    },
+    {
+      "id": "applications_hub",
+      "type": "applications",
+      "text": {
+        "Italiano": "Applicazioni\nLink a strumenti esterni",
+        "English": "Applications\nLinks to external tools"
+      },
+      "links": [
+        { 
+          "label": { "Italiano": "Planner", "English": "Planner" }, 
+          "href": "https://planner.cloud.microsoft/webui/plan/i7MB_RFn10irFSR9OPW9RJcABF-f/view/board?tid=4e317c2f-7cca-4462-96a6-cce014a3b1cf" 
+        },
+        { 
+          "label": { "Italiano": "Perplexity", "English": "Perplexity" }, 
+          "href": "https://www.perplexity.ai/" 
+        },
+        { 
+          "label": { "Italiano": "Whimsical", "English": "Whimsical" }, 
+          "href": "https://whimsical.com/master-of-scale-strategy-JHmnzeHziW1XzwMRisbhzS" 
+        },
+        { 
+          "label": { "Italiano": "WhatsApp", "English": "WhatsApp" }, 
+          "href": "https://web.whatsapp.com/" 
+        },
+        { 
+          "label": { "Italiano": "Telegram", "English": "Telegram" }, 
+          "href": "https://web.telegram.org/a/" 
+        }
+      ],
+      "actions": [
+        { "label": { "Italiano": "Torna alla Home", "English": "Back to Home" }, "action": "next", "target": "start" }
+      ]
+    },
+    {
+      "id": "agenda",
+      "type": "agenda",
+      "text": {
+        "Italiano": "Agenda\nI tuoi appunti personali",
+        "English": "Agenda\nYour personal notes"
+      },
+      "actions": [
+        { "label": { "Italiano": "Torna alla Home", "English": "Back to Home" }, "action": "next", "target": "start" }
+      ]
+    },
+    {
+      "id": "tasks",
+      "type": "tasks",
+      "text": {
+        "Italiano": "Attività\nLa tua lista di cose da fare",
+        "English": "Tasks\nYour to-do list"
+      },
+      "actions": [
+        { "label": { "Italiano": "Torna alla Home", "English": "Back to Home" }, "action": "next", "target": "start" }
       ]
     },
     {

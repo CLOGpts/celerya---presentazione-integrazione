@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Language, Action } from '../types.ts';
 
@@ -23,9 +22,9 @@ const TitleScreen: React.FC<TitleScreenProps> = ({ text, actions, onNavigate, la
   return (
     <div className="text-center flex flex-col items-center justify-center min-h-[400px] p-4 animate-fade-in">
       <div className="relative inline-block">
-        <h1 className="text-8xl md:text-9xl font-bold" style={{ color: '#2D5F9D' }}>
-          {mainTitle}
-          <sup className="text-4xl md:text-5xl top-[-2.5em] ml-2">®</sup>
+        <h1 className="text-6xl sm:text-8xl md:text-[10rem] font-bold flex items-start justify-center" style={{ color: '#2D5F9D' }}>
+          <span>{mainTitle}</span>
+          <span className="text-3xl sm:text-5xl md:text-7xl ml-1 sm:ml-2" style={{lineHeight: 0.8}}>®</span>
         </h1>
         <div 
           className="w-full h-1 absolute -bottom-1"
@@ -37,30 +36,39 @@ const TitleScreen: React.FC<TitleScreenProps> = ({ text, actions, onNavigate, la
         ></div>
       </div>
       
-      <p className="text-4xl md:text-5xl text-slate-600 mt-12 mb-6">
+      <p className="text-2xl sm:text-4xl md:text-6xl text-slate-600 mt-12 sm:mt-16 mb-8">
         {subtitle}
       </p>
 
       {slogan && (
-        <p className="text-3xl md:text-4xl text-slate-500 italic mb-20">
+        <p className="text-xl sm:text-3xl md:text-5xl text-slate-500 italic mb-12 sm:mb-24">
           "{slogan}"
         </p>
       )}
 
-      <div className="flex flex-wrap items-center justify-center gap-6 mt-12">
-        {actions.map((action) => (
-          <button 
-            key={action.target}
-            onClick={() => handleAction(action)}
-            className="min-w-[240px] flex items-center justify-center px-10 py-5 text-white font-bold text-2xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8]"
-            style={{ 
-              backgroundColor: '#3B74B8', 
-              boxShadow: '0 10px 15px -3px rgba(59, 116, 184, 0.3), 0 4px 6px -2px rgba(59, 116, 184, 0.2)',
-            }}
-          >
-            {action.label[language]}
-          </button>
-        ))}
+      <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-4 sm:gap-8 mt-8 sm:mt-16">
+        {actions.map((action) => {
+           const isGreen = action.color === 'green';
+           const bgColor = isGreen ? '#16a34a' : '#3B74B8';
+           const shadowColor = isGreen ? 'rgba(22, 163, 74, 0.3)' : 'rgba(59, 116, 184, 0.3)';
+           const shadowColorLight = isGreen ? 'rgba(22, 163, 74, 0.2)' : 'rgba(59, 116, 184, 0.2)';
+           const ringColor = isGreen ? '#16a34a' : '#3B74B8';
+
+          return (
+            <button 
+              key={action.target}
+              onClick={() => handleAction(action)}
+              className="w-full max-w-xs sm:w-auto sm:min-w-[280px] flex items-center justify-center px-8 sm:px-12 py-4 sm:py-6 text-white font-bold text-xl sm:text-3xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50"
+              style={{ 
+                backgroundColor: bgColor, 
+                boxShadow: `0 10px 15px -3px ${shadowColor}, 0 4px 6px -2px ${shadowColorLight}`,
+                '--tw-ring-color': ringColor
+              } as React.CSSProperties}
+            >
+              {action.label[language]}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

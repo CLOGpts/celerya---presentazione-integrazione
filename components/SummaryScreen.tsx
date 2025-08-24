@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Action, Language } from '../types.ts';
 import { CheckCircleIcon, SparklesIcon } from './Icons.tsx';
@@ -21,22 +20,22 @@ const SummaryScreen: React.FC<SummaryScreenProps> = ({ text, actions, onNavigate
   };
 
   return (
-    <div className="bg-white border border-gray-200/90 rounded-2xl shadow-xl p-8 md:p-12 flex flex-col items-center text-center animate-slide-up-fade">
-      <div className="mb-8 bg-green-100 p-6 rounded-full">
-        <CheckCircleIcon className="h-24 w-24 text-green-500" />
+    <div className="bg-white border border-gray-200/90 rounded-2xl shadow-xl p-6 sm:p-8 md:p-12 flex flex-col items-center text-center animate-slide-up-fade">
+      <div className="mb-6 sm:mb-10 bg-green-100 p-4 sm:p-8 rounded-full">
+        <CheckCircleIcon className="h-16 w-16 sm:h-28 sm:w-28 text-green-500" />
       </div>
-      <h2 className="text-6xl font-bold text-slate-800 mb-6 flex items-center gap-3">
-        {title} {actions.length === 1 && <SparklesIcon className="h-10 w-10 text-yellow-400" />}
+      <h2 className="text-3xl sm:text-5xl md:text-7xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+        {title} {actions.length === 1 && <SparklesIcon className="h-8 w-8 sm:h-12 sm:w-12 text-yellow-400" />}
       </h2>
-      <p className="text-slate-500 max-w-lg mb-8 whitespace-pre-line text-2xl">{descriptionParts.join('\n')}</p>
-      {lastLine && <p className="text-3xl font-semibold max-w-lg mb-12" style={{color: '#2D5F9D'}}>{lastLine}</p>}
+      <p className="text-lg sm:text-2xl md:text-3xl text-slate-500 max-w-lg mb-8 whitespace-pre-line">{descriptionParts.join('\n')}</p>
+      {lastLine && <p className="text-xl sm:text-3xl md:text-4xl font-semibold max-w-lg mb-12" style={{color: '#2D5F9D'}}>{lastLine}</p>}
 
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-4">
         {actions.map((action, index) => (
           <button
             key={index}
             onClick={() => handleAction(action)}
-            className="px-10 py-4 text-xl font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8]"
+            className="px-8 sm:px-12 py-3 sm:py-5 text-lg sm:text-2xl font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-opacity-50 focus:ring-[#3B74B8]"
             style={{ 
               backgroundColor: '#3B74B8',
               color: 'white',

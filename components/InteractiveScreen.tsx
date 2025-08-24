@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Action, Language } from '../types.ts';
 import { UploadIcon, CloudIcon, ChipIcon } from './Icons.tsx';

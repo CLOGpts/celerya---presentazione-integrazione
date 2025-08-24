@@ -1,4 +1,3 @@
-
 export type Language = "Italiano" | "English";
 
 export interface LocalizedText {
@@ -10,6 +9,12 @@ export interface Action {
   label: LocalizedText;
   action: "next" | "restart";
   target: string;
+  color?: "green";
+}
+
+export interface ApplicationLink {
+    label: LocalizedText;
+    href: string;
 }
 
 export interface PresentationStep {
@@ -78,7 +83,7 @@ export interface EcosystemData {
 
 export interface Screen {
   id: string;
-  type: "title" | "summary" | "presentation" | "pricing" | "ecosystem";
+  type: "title" | "summary" | "presentation" | "pricing" | "ecosystem" | "dashboard" | "applications" | "agenda" | "tasks";
   text: LocalizedText;
   actions?: Action[];
   next?: string;
@@ -87,6 +92,7 @@ export interface Screen {
   sydAgent?: SydAgentPricing;
   dataProducer?: DataProducerInfo;
   ecosystem?: EcosystemData;
+  links?: ApplicationLink[];
 }
 
 export interface DemoData {
