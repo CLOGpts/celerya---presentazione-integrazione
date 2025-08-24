@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Language, Action } from '../types.ts';
+import { Note, Task } from '../types/app.ts';
 import { getTasksFromDB, addTaskToDB, getNotesFromDB } from '../services/firebase.ts';
 import { PlusIcon } from './Icons.tsx';
 
@@ -9,9 +10,19 @@ interface DashboardScreenProps {
   language: Language;
 }
 
+const ActionButton: React.FC<{ action: Action; onNavigate: (target: string) => void; language: Language; }> = ({ action, onNavigate, language }) => {
+    const isGreen = action.color === 'green';
+    const bgColor = isGreen ? 'bg-green-600 hover:bg-green-700' : 'bg-[#3B74B8] hover:bg-[#2D5F9D]';
+    return (
+        <button onClick={() => onNavigate(action.target)} className={`w-full p-4 sm:p-5 text-white font-semibold rounded-full shadow-md transition-colors text-center text-base sm:text-lg ${bgColor}`}>
+            {action.label[language]}
+        </button>
+    );
+};
+
 const DashboardScreen: React.FC<DashboardScreenProps> = ({ actions, onNavigate, language }) => {
-    const [tasks, setTasks] = useState<any[]>([]);
-    const [notes, setNotes] = useState<any[]>([]);
+    const [tasks, setTasks] = useState<Task[]>([]);
+    const [notes, setNotes] = useState<Note[]>([]);
 
     const refreshData = useCallback(async () => {
         const allTasks = await getTasksFromDB();
@@ -29,7 +40,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ actions, onNavigate, 
         const allNotes = await getNotesFromDB();
         const todayStr = new Date().toISOString().slice(0, 10);
         const todayNotes = allNotes.filter(n => n.date === todayStr);
-        const recentTodayNotes = todayNotes.sort((a, b) => b.id - a.id).slice(0, 3);
+        const recentTodayNotes = todayNotes.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 3);
         setNotes(recentTodayNotes);
     }, []);
 
@@ -42,7 +53,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ actions, onNavigate, 
         return () => window.removeEventListener('focus', handleFocus);
     }, [refreshData]);
 
-    const TodayTasksWidget = ({ tasks }: { tasks: any[] }) => (
+    const TodayTasksWidget = ({ tasks }: { tasks: Task[] }) => (
         <div className="bg-white rounded-3xl shadow-lg border border-slate-200/80 p-6 md:p-8 lg:p-12">
             <h3 className="font-bold text-2xl md:text-3xl text-slate-800 mb-6 sm:mb-8">{language === 'Italiano' ? 'Le Mie Attività Scadute' : 'My Overdue Tasks'}</h3>
             {tasks.length > 0 ? (
@@ -58,7 +69,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ actions, onNavigate, 
         </div>
     );
     
-    const RecentNotesWidget = ({ notes }: { notes: any[] }) => (
+    const RecentNotesWidget = ({ notes }: { notes: Note[] }) => (
         <div className="bg-white rounded-3xl shadow-lg border border-slate-200/80 p-6 md:p-8 lg:p-12">
             <h3 className="font-bold text-2xl md:text-3xl text-slate-800 mb-6 sm:mb-8">{language === 'Italiano' ? 'Appunti di Oggi' : 'Today\'s Notes'}</h3>
             {notes.length > 0 ? (
@@ -81,7 +92,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ actions, onNavigate, 
             e.preventDefault();
             if (content.trim() === '') return;
             
-            const newTask = {
+            const newTask: Omit<Task, 'id'> = {
                 content: content.trim(),
                 completed: false,
                 createdAt: new Date().toISOString(),
@@ -109,29 +120,19 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ actions, onNavigate, 
         const presentationActions = actions.filter(a => a.color !== 'green');
         const toolActions = actions.filter(a => a.color === 'green');
 
-        const ActionButton = ({ action }: { action: Action }) => {
-            const isGreen = action.color === 'green';
-            const bgColor = isGreen ? 'bg-green-600 hover:bg-green-700' : 'bg-[#3B74B8] hover:bg-[#2D5F9D]';
-            return (
-                <button onClick={() => onNavigate(action.target)} className={`w-full p-4 sm:p-5 text-white font-semibold rounded-full shadow-md transition-colors text-center text-base sm:text-lg ${bgColor}`}>
-                    {action.label[language]}
-                </button>
-            );
-        };
-
         return (
             <div className="bg-white rounded-3xl shadow-lg border border-slate-200/80 p-6 md:p-8 lg:p-12 md:col-span-2 lg:col-span-3">
                  <div className="space-y-8 sm:space-y-10">
                     <div>
                         <h4 className="text-xl sm:text-2xl font-bold text-slate-800 mb-6">{language === 'Italiano' ? 'Presentazioni' : 'Presentations'}</h4>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-                            {presentationActions.map(action => <ActionButton key={action.target} action={action} />)}
+                            {presentationActions.map(action => <ActionButton key={action.target} action={action} onNavigate={onNavigate} language={language} />)}
                         </div>
                     </div>
                     <div>
                         <h4 className="text-xl sm:text-2xl font-bold text-slate-800 mb-6">{language === 'Italiano' ? 'Strumenti' : 'Tools'}</h4>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-                            {toolActions.map(action => <ActionButton key={action.target} action={action} />)}
+                            {toolActions.map(action => <ActionButton key={action.target} action={action} onNavigate={onNavigate} language={language} />)}
                         </div>
                     </div>
                 </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Language, Action } from '../types.ts';
+import { Task } from '../types/app.ts';
 import { getTasksFromDB, addTaskToDB, updateTaskInDB, deleteTaskFromDB } from '../services/firebase.ts';
 import { TrashIcon } from './Icons.tsx';
 
@@ -11,8 +12,8 @@ interface TasksScreenProps {
 }
 
 const TasksScreen: React.FC<TasksScreenProps> = ({ text, actions, onNavigate, language }) => {
-    const [tasks, setTasks] = useState<any[]>([]);
-    const [newTask, setNewTask] = useState({ content: '', priority: 'medium', dueDate: '', project: 'Lavoro' });
+    const [tasks, setTasks] = useState<Task[]>([]);
+    const [newTask, setNewTask] = useState({ content: '', priority: 'medium' as Task['priority'], dueDate: '', project: 'Lavoro' });
     const [activeProject, setActiveProject] = useState('All');
 
     useEffect(() => {
@@ -26,7 +27,7 @@ const TasksScreen: React.FC<TasksScreenProps> = ({ text, actions, onNavigate, la
         e.preventDefault();
         if (newTask.content.trim() === '') return;
 
-        const taskData = {
+        const taskData: Omit<Task, 'id'> = {
             ...newTask,
             content: newTask.content.trim(),
             project: newTask.project.trim() || (language === 'Italiano' ? 'Nessun Progetto' : 'No Project'),
@@ -73,7 +74,7 @@ const TasksScreen: React.FC<TasksScreenProps> = ({ text, actions, onNavigate, la
         if (!acc[project]) acc[project] = [];
         acc[project].push(task);
         return acc;
-    }, {} as Record<string, any[]>);
+    }, {} as Record<string, Task[]>);
     
     const priorityMap = {
         high: { label: language === 'Italiano' ? 'Alta' : 'High', color: 'bg-red-500' },
@@ -92,7 +93,7 @@ const TasksScreen: React.FC<TasksScreenProps> = ({ text, actions, onNavigate, la
                 <form onSubmit={handleAddTask} className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
                     <input type="text" value={newTask.content} onChange={e => setNewTask({...newTask, content: e.target.value})} placeholder={language === 'Italiano' ? 'Cosa c\'è da fare?' : 'What needs to be done?'} className="sm:col-span-4 w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#3B74B8] focus:outline-none text-base sm:text-lg bg-white text-slate-800" />
                     <input type="text" value={newTask.project} onChange={e => setNewTask({...newTask, project: e.target.value})} placeholder={language === 'Italiano' ? 'Progetto' : 'Project'} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#3B74B8] focus:outline-none bg-white text-slate-800 text-base sm:text-lg" />
-                    <select value={newTask.priority} onChange={e => setNewTask({...newTask, priority: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#3B74B8] focus:outline-none bg-white text-slate-800 text-base sm:text-lg">
+                    <select value={newTask.priority} onChange={e => setNewTask({...newTask, priority: e.target.value as Task['priority']})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#3B74B8] focus:outline-none bg-white text-slate-800 text-base sm:text-lg">
                         <option value="high">{priorityMap.high.label}</option>
                         <option value="medium">{priorityMap.medium.label}</option>
                         <option value="low">{priorityMap.low.label}</option>

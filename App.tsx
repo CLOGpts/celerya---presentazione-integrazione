@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { demoData } from './data/demo.ts';
 import { Language, Screen } from './types.ts';
+import { getTaskFromDB, addTaskToDB, updateTaskInDB, addNoteToDB, getNoteFromDB } from './services/firebase.ts';
 import LanguageSelector from './components/LanguageSelector.tsx';
 import GlobalHeader from './components/GlobalHeader.tsx';
 import AiAssistantScreen from './components/AiAssistantScreen.tsx';
@@ -20,6 +21,7 @@ const App = () => {
   const [isExiting, setIsExiting] = useState(false);
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [assistantQuery, setAssistantQuery] = useState('');
+  const [activeScreenProps, setActiveScreenProps] = useState<any>({});
 
   const screens = useMemo(() => demoData.screens, []);
   
@@ -30,6 +32,7 @@ const App = () => {
   const handleNavigation = useCallback((targetId: string) => {
     setIsExiting(true);
     setTimeout(() => {
+      setActiveScreenProps({}); // Resetta le props specifiche della schermata alla navigazione
       setCurrentScreenId(targetId);
       setIsExiting(false);
       window.scrollTo(0, 0);
@@ -41,24 +44,69 @@ const App = () => {
     setIsAssistantOpen(true);
   };
 
-  const handleExecuteCommand = (command: { action: string, target: string }) => {
-    const { action, target } = command;
+  const handleExecuteCommands = useCallback(async (commands: { action: string, payload: any }[]) => {
+    if (commands.length === 0) return;
 
-    setTimeout(() => { // Delay to allow user to read the AI response
-        setIsAssistantOpen(false); // Close assistant after executing command
+    setTimeout(async () => { // Delay to allow user to read the AI response
+        setIsAssistantOpen(false); // Close assistant after executing commands
         
-        if (action === 'navigate') {
-            const screenExists = screens.some(s => s.id === target);
-            if (screenExists) {
-                handleNavigation(target);
-            } else {
-                console.warn(`Navigation target "${target}" not found.`);
+        for (const command of commands) {
+            const { action, payload } = command;
+
+            switch(action) {
+                case 'navigate':
+                    if (payload.screenId && screens.some(s => s.id === payload.screenId)) {
+                        handleNavigation(payload.screenId);
+                    }
+                    break;
+                case 'open_url':
+                    if (payload.url) {
+                        window.open(payload.url, '_blank', 'noopener,noreferrer');
+                    }
+                    break;
+                case 'add_task':
+                    await addTaskToDB({
+                        content: payload.content || (language === 'Italiano' ? 'Nuova attività' : 'New task'),
+                        completed: false,
+                        createdAt: new Date().toISOString(),
+                        priority: payload.priority || 'medium',
+                        dueDate: payload.dueDate || '',
+                        project: payload.project || (language === 'Italiano' ? 'Da AI' : 'From AI')
+                    });
+                    if (commands.length === 1) handleNavigation('tasks'); // Navigate only if it's the single action
+                    break;
+                case 'complete_task':
+                    if (payload.taskId) {
+                        const task = await getTaskFromDB(payload.taskId);
+                        if (task) {
+                            await updateTaskInDB(payload.taskId, { ...task, completed: true });
+                            // You might want to add a visual confirmation here
+                        }
+                    }
+                    break;
+                case 'add_note':
+                    const newNote = await addNoteToDB({
+                        title: payload.title || (language === 'Italiano' ? 'Nuovo appunto' : 'New Note'),
+                        content: payload.content || '',
+                        date: new Date().toISOString().slice(0, 10)
+                    });
+                    if (newNote && commands.length === 1) { // Navigate only if it's the single action
+                        setActiveScreenProps({ initialNoteId: newNote.id });
+                        handleNavigation('agenda');
+                    }
+                    break;
+                case 'open_note':
+                     if (payload.noteId) {
+                        setActiveScreenProps({ initialNoteId: payload.noteId });
+                        handleNavigation('agenda');
+                    }
+                    break;
+                default:
+                    console.warn(`Unknown command action: "${action}"`);
             }
-        } else if (action === 'open_url') {
-            window.open(target, '_blank', 'noopener,noreferrer');
         }
     }, 1500); // 1.5 second delay
-  };
+  }, [handleNavigation, language, screens]);
 
   const renderScreen = () => {
     if (!currentScreen) return null;
@@ -94,7 +142,7 @@ const App = () => {
       case 'applications':
         return <ApplicationsScreen {...props} />;
       case 'agenda':
-        return <AgendaScreen {...props} />;
+        return <AgendaScreen {...props} {...activeScreenProps} />;
       case 'tasks':
         return <TasksScreen {...props} />;
       default:
@@ -109,7 +157,7 @@ const App = () => {
           <AiAssistantScreen 
               initialQuery={assistantQuery} 
               onClose={() => setIsAssistantOpen(false)} 
-              onExecuteCommand={handleExecuteCommand}
+              onExecuteCommands={handleExecuteCommands}
               language={language}
           />
       )}
@@ -123,7 +171,7 @@ const App = () => {
         </div>
       )}
       
-      <main className={`w-full max-w-screen-2xl mx-auto z-10 mt-28`}>
+      <main className="w-full max-w-screen-2xl mx-auto z-10 transition-all duration-300 mt-28">
         <div 
           className={`transition-opacity duration-300 ease-in-out w-full ${isExiting ? 'opacity-0' : 'opacity-100'}`}
           key={currentScreenId}

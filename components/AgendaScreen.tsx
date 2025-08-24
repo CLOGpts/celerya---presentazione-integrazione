@@ -1,34 +1,108 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { GoogleGenAI, Type } from "@google/genai";
 import { Language, Action } from '../types.ts';
-import { getNotesFromDB, addNoteToDB, updateNoteInDB, deleteTaskFromDB, getTasksFromDB, addTaskToDB, deleteNoteFromDB } from '../services/firebase.ts';
-import { PencilIcon, TrashIcon, SparklesIcon, ChevronLeftIcon, XMarkIcon } from './Icons.tsx';
+import { Note, Task } from '../types/app.ts';
+import { getNotesFromDB, addNoteToDB, updateNoteInDB, addTaskToDB, deleteNoteFromDB } from '../services/firebase.ts';
+import { extractTasksFromText } from '../services/gemini.ts';
+import { PencilIcon, TrashIcon, SparklesIcon, ChevronLeftIcon, XMarkIcon, PlusIcon } from './Icons.tsx';
 
 interface AgendaScreenProps {
   text: string;
   actions: Action[];
   onNavigate: (targetId: string) => void;
   language: Language;
+  initialNoteId?: string; // Nuova prop per aprire un appunto specifico
 }
 
-const AgendaScreen: React.FC<AgendaScreenProps> = ({ text, actions, onNavigate, language }) => {
-    const [notes, setNotes] = useState<any[]>([]);
+const AiSuggestionsModal: React.FC<{
+    visible: boolean;
+    tasks: string[];
+    loading: boolean;
+    error: string | null;
+    language: Language;
+    onClose: () => void;
+    onAdd: (tasks: string[]) => void;
+}> = ({ visible, tasks, loading, error, language, onClose, onAdd }) => {
+    const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
+
+    useEffect(() => {
+        if (visible) {
+            setSelectedTasks(tasks);
+        }
+    }, [tasks, visible]);
+
+    if (!visible) return null;
+
+    const toggleTaskSelection = (task: string) => {
+        setSelectedTasks(prev => 
+            prev.includes(task) ? prev.filter(t => t !== task) : [...prev, task]
+        );
+    };
+
+    const handleAddClick = () => {
+        onAdd(selectedTasks);
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in-fast">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden">
+                <header className="flex items-center justify-between p-4 border-b border-slate-200">
+                    <div className="flex items-center gap-3">
+                        <SparklesIcon className="h-6 w-6 text-sky-500" />
+                        <h2 className="text-xl font-bold text-slate-800">{language === 'Italiano' ? 'Attività Suggerite' : 'Suggested Tasks'}</h2>
+                    </div>
+                    <button onClick={onClose} className="p-2 rounded-full text-slate-500 hover:bg-slate-100"><XMarkIcon className="h-6 w-6" /></button>
+                </header>
+                <div className="p-6 max-h-[60vh] overflow-y-auto">
+                    {loading && <p className="text-slate-500 italic">{language === 'Italiano' ? 'Analisi in corso...' : 'Analyzing...'}</p>}
+                    {error && <p className="text-red-500">{error}</p>}
+                    {!loading && !error && tasks.length === 0 && <p className="text-slate-500">{language === 'Italiano' ? 'Nessuna attività trovata.' : 'No tasks found.'}</p>}
+                    {!loading && !error && tasks.length > 0 && (
+                        <div className="space-y-3">
+                            {tasks.map((task, index) => (
+                                <div key={index} onClick={() => toggleTaskSelection(task)} className="flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
+                                    <input type="checkbox" checked={selectedTasks.includes(task)} readOnly className="h-5 w-5 rounded border-gray-300 text-[#3B74B8] focus:ring-[#3B74B8]" />
+                                    <span className="text-slate-700">{task}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+                <footer className="p-4 border-t border-slate-200 bg-white flex justify-end gap-3">
+                    <button onClick={onClose} className="px-4 py-2 text-slate-600 font-semibold rounded-lg hover:bg-slate-100">{language === 'Italiano' ? 'Annulla' : 'Cancel'}</button>
+                    <button onClick={handleAddClick} disabled={selectedTasks.length === 0} className="px-4 py-2 bg-[#3B74B8] text-white font-semibold rounded-lg disabled:bg-slate-400">{language === 'Italiano' ? `Aggiungi ${selectedTasks.length} attività` : `Add ${selectedTasks.length} tasks`}</button>
+                </footer>
+            </div>
+        </div>
+    );
+};
+
+
+const AgendaScreen: React.FC<AgendaScreenProps> = ({ text, actions, onNavigate, language, initialNoteId }) => {
+    const [notes, setNotes] = useState<Note[]>([]);
     const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
     const [currentTitle, setCurrentTitle] = useState('');
     const [currentContent, setCurrentContent] = useState('');
     const [currentDate, setCurrentDate] = useState(new Date().toISOString().slice(0, 10));
     const [selectionPopover, setSelectionPopover] = useState<{top: number, left: number, text: string} | null>(null);
-    const [aiSuggestions, setAiSuggestions] = useState({ visible: false, tasks: [] as string[], loading: false, error: '' });
+    const [aiSuggestions, setAiSuggestions] = useState<{ visible: boolean, tasks: string[], loading: boolean, error: string | null }>({ visible: false, tasks: [], loading: false, error: null });
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     useEffect(() => {
-        const fetchNotes = async () => {
+        const fetchNotesAndSelect = async () => {
             const dbNotes = await getNotesFromDB();
             setNotes(dbNotes);
+            if (initialNoteId) {
+                const noteToOpen = dbNotes.find(n => n.id === initialNoteId);
+                if (noteToOpen) {
+                    handleSelectNote(noteToOpen);
+                }
+            } else if (dbNotes.length > 0) {
+                handleSelectNote(dbNotes[0]);
+            }
         };
-        fetchNotes();
-    }, []);
+        fetchNotesAndSelect();
+    }, [initialNoteId]);
     
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -40,7 +114,7 @@ const AgendaScreen: React.FC<AgendaScreenProps> = ({ text, actions, onNavigate, 
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [selectionPopover]);
 
-    const handleSelectNote = (note: any) => {
+    const handleSelectNote = (note: Note) => {
         setActiveNoteId(note.id);
         setCurrentTitle(note.title);
         setCurrentContent(note.content);
@@ -76,7 +150,11 @@ const AgendaScreen: React.FC<AgendaScreenProps> = ({ text, actions, onNavigate, 
     }, [activeNoteId, currentTitle, currentContent, currentDate, notes]);
     
     useEffect(() => {
-        const handler = setTimeout(() => handleSaveNote(), 500);
+        const handler = setTimeout(() => {
+            if (activeNoteId) {
+                handleSaveNote();
+            }
+        }, 500);
         return () => clearTimeout(handler);
     }, [currentTitle, currentContent, currentDate, activeNoteId, handleSaveNote]);
 
@@ -106,7 +184,7 @@ const AgendaScreen: React.FC<AgendaScreenProps> = ({ text, actions, onNavigate, 
 
     const handleCreateTaskFromSelection = async () => {
         if (!selectionPopover?.text) return;
-        const newTask = {
+        const newTask: Omit<Task, 'id'> = {
             content: selectionPopover.text,
             completed: false,
             createdAt: new Date().toISOString(),
@@ -119,162 +197,112 @@ const AgendaScreen: React.FC<AgendaScreenProps> = ({ text, actions, onNavigate, 
         alert(language === 'Italiano' ? `Attività "${selectionPopover.text}" creata!` : `Task "${selectionPopover.text}" created!`);
     };
 
-    const handleExtractActions = async () => {
+    const handleExtractTasks = async () => {
         if (!currentContent) return;
-        setAiSuggestions({ visible: true, loading: true, tasks: [], error: '' });
-        
-        try {
-            if (!process.env.API_KEY) {
-                const errorMessage = language === 'Italiano' 
-                    ? "Manca la chiave API di Gemini. Configurala nell'ambiente." 
-                    : "Gemini API Key is missing. Please configure it in the environment.";
-                setAiSuggestions({ visible: true, loading: false, tasks: [], error: errorMessage });
-                return;
-            }
-
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-            
-            const prompt = `Analizza il seguente testo e estrai una lista di attività concrete e azionabili. Restituisci il risultato come un oggetto JSON con una singola chiave 'tasks', che è un array di stringhe. Esempio: { "tasks": ["Fare follow-up con Mario riguardo al report", "Pianificare la riunione per la prossima settimana"] }. Non includere attività già completate. Il testo è:\n\n${currentContent}`;
-
-            const response = await ai.models.generateContent({
-              model: "gemini-2.5-flash",
-              contents: prompt,
-              config: {
-                responseMimeType: "application/json",
-                responseSchema: {
-                  type: Type.OBJECT,
-                  properties: {
-                    tasks: {
-                      type: Type.ARRAY,
-                      items: { type: Type.STRING },
-                    },
-                  },
-                },
-              },
-            });
-            
-            const jsonResponse = JSON.parse(response.text);
-            const extractedTasks = jsonResponse.tasks || [];
-            
-            if (extractedTasks.length === 0) {
-                setAiSuggestions({ visible: true, loading: false, tasks: [], error: language === 'Italiano' ? 'Nessuna azione trovata.' : 'No actionable items found.' });
-            } else {
-                setAiSuggestions({ visible: true, loading: false, tasks: extractedTasks, error: '' });
-            }
-
-        } catch (error) {
-            console.error("Error extracting actions:", error);
-            const errorMessage = language === 'Italiano' 
-                ? "Errore durante la chiamata all'AI. Controlla la console e verifica che la chiave API sia corretta."
-                : "Error calling AI. Check the console and verify your API key is correct.";
-            setAiSuggestions({ visible: true, loading: false, tasks: [], error: errorMessage });
+        setAiSuggestions({ visible: true, tasks: [], loading: true, error: null });
+        const result = await extractTasksFromText(currentContent, language);
+        if (result.error) {
+            setAiSuggestions({ visible: true, tasks: [], loading: false, error: result.error });
+        } else {
+            setAiSuggestions({ visible: true, tasks: result.tasks, loading: false, error: null });
         }
     };
     
-    const handleAddSuggestedTask = async (taskContent: string) => {
-        const newTask = {
-            content: taskContent,
-            completed: false,
-            createdAt: new Date().toISOString(),
-            priority: 'medium',
-            dueDate: '',
-            project: language === 'Italiano' ? 'Da Agenda (AI)' : 'From Agenda (AI)'
-        };
-        await addTaskToDB(newTask);
-        setAiSuggestions(prev => ({...prev, tasks: prev.tasks.filter(t => t !== taskContent)}));
+    const handleAddSelectedTasks = async (selectedTasks: string[]) => {
+        for (const taskContent of selectedTasks) {
+            const newTask: Omit<Task, 'id'> = {
+                content: taskContent,
+                completed: false,
+                createdAt: new Date().toISOString(),
+                priority: 'medium',
+                dueDate: '',
+                project: language === 'Italiano' ? 'Da Agenda' : 'From Agenda'
+            };
+            await addTaskToDB(newTask);
+        }
+        setAiSuggestions({ ...aiSuggestions, visible: false });
+        alert(language === 'Italiano' ? `${selectedTasks.length} attività aggiunte!` : `${selectedTasks.length} tasks added!`);
     };
 
-    const sortedNotes = [...notes].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const [title, subtitle] = text.split('\n');
 
     return (
         <div className="flex flex-col w-full animate-fade-in max-w-7xl mx-auto">
              <div className="text-center mb-8 sm:mb-12">
-                <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold" style={{ color: '#2D5F9D' }}>{text.split('\n')[0]}</h1>
-                <p className="text-lg sm:text-2xl md:text-3xl text-slate-600 mt-4">{text.split('\n')[1] || ''}</p>
+                <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold" style={{ color: '#2D5F9D' }}>{title}</h1>
+                <p className="text-lg sm:text-2xl md:text-3xl text-slate-600 mt-4">{subtitle || ''}</p>
              </div>
-             {selectionPopover && (
-                <div 
-                    className="selection-popover absolute z-10 bg-slate-800 text-white px-3 py-1 rounded-md shadow-lg text-sm font-semibold animate-fade-in-fast"
-                    style={{ top: `${selectionPopover.top}px`, left: `${selectionPopover.left}px` }}
-                    >
-                    <button onClick={handleCreateTaskFromSelection}>
-                        {language === 'Italiano' ? 'Crea Attività' : 'Create Task'}
+
+             <div className="flex flex-col md:flex-row gap-6 md:gap-8 w-full min-h-[65vh] bg-white rounded-2xl shadow-xl border border-slate-200/80 p-4 sm:p-6 md:p-8">
+                {/* Notes List */}
+                <div className="w-full md:w-1/3 flex flex-col border-r-0 md:border-r md:pr-6 border-slate-200">
+                    <button onClick={handleNewNote} className="w-full mb-4 flex items-center justify-center gap-2 p-3 text-white font-semibold rounded-lg shadow-md transition-transform transform hover:scale-105" style={{ backgroundColor: '#3B74B8' }}>
+                        <PlusIcon className="h-6 w-6" />
+                        {language === 'Italiano' ? 'Nuovo Appunto' : 'New Note'}
                     </button>
-                </div>
-            )}
-             <div className="flex flex-col md:flex-row gap-4 sm:gap-8 w-full h-[70vh] bg-white rounded-2xl shadow-xl border border-slate-200/80 p-4">
-                <div className={`w-full md:w-1/3 flex-col border-r-0 md:border-r border-slate-200 md:pr-4 ${activeNoteId ? 'hidden md:flex' : 'flex'}`}>
-                    <button onClick={handleNewNote} className="w-full text-center px-4 py-3 mb-4 text-white font-semibold rounded-lg shadow-md transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B74B8] text-lg sm:text-xl" style={{ backgroundColor: '#3B74B8' }}>
-                        + {language === 'Italiano' ? 'Nuovo Appunto' : 'New Note'}
-                    </button>
-                    <div className="overflow-y-auto flex-grow">
-                        {sortedNotes.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center h-full text-center text-slate-400 p-4">
-                                <PencilIcon className="h-16 w-16 sm:h-20 sm:w-20 mb-4" />
-                                <p className="font-semibold text-lg sm:text-xl">{language === 'Italiano' ? 'Nessun appunto.' : 'No notes yet.'}</p>
-                            </div>
-                        ) : sortedNotes.map(note => (
-                            <div key={note.id} onClick={() => handleSelectNote(note)} className={`p-3 sm:p-4 rounded-lg mb-2 cursor-pointer transition-colors ${activeNoteId === note.id ? 'bg-sky-100' : 'hover:bg-slate-100'}`}>
-                                <p className="font-bold text-slate-800 truncate text-base sm:text-lg">{note.title || (language === 'Italiano' ? 'Senza Titolo' : 'Untitled')}</p>
-                                <p className="text-sm sm:text-base text-slate-500">{new Date(note.date).toLocaleDateString(language === 'Italiano' ? 'it-IT' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                            </div>
-                        ))}
+                    <div className="flex-grow overflow-y-auto pr-2">
+                        <ul className="space-y-2">
+                            {notes.map(note => (
+                                <li key={note.id} onClick={() => handleSelectNote(note)} className={`p-3 rounded-lg cursor-pointer ${activeNoteId === note.id ? 'bg-sky-100' : 'hover:bg-slate-100'}`}>
+                                    <h3 className={`font-bold text-slate-800 truncate ${activeNoteId === note.id ? 'text-[#3B74B8]' : ''}`}>{note.title}</h3>
+                                    <p className="text-sm text-slate-500">{new Date(note.date).toLocaleDateString(language === 'Italiano' ? 'it-IT' : 'en-US')}</p>
+                                </li>
+                            ))}
+                        </ul>
                     </div>
                 </div>
-
-                <div className={`w-full md:w-2/3 flex-col ${activeNoteId ? 'flex' : 'hidden md:flex'}`}>
+                
+                {/* Note Editor */}
+                <div className="w-full md:w-2/3 flex flex-col">
                     {activeNoteId ? (
                         <>
-                           <div className="flex-shrink-0 mb-4">
-                                <button onClick={() => setActiveNoteId(null)} className="md:hidden flex items-center gap-2 text-slate-600 font-semibold mb-3 p-1 -ml-1">
-                                    <ChevronLeftIcon className="h-6 w-6" /><span>{language === 'Italiano' ? 'Tutti gli appunti' : 'All notes'}</span>
-                                </button>
-                                <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-center">
-                                    <input type="date" value={currentDate} onChange={(e) => setCurrentDate(e.target.value)} className="flex-shrink-0 w-full sm:w-auto p-2 sm:p-3 border bg-white text-slate-800 border-slate-300 rounded-lg focus:ring-2 focus:ring-[#3B74B8] focus:outline-none text-base sm:text-lg" />
-                                    <input type="text" placeholder={language === 'Italiano' ? 'Titolo...' : 'Title...'} value={currentTitle} onChange={(e) => setCurrentTitle(e.target.value)} className="w-full p-2 sm:p-3 border bg-white text-slate-800 border-slate-300 rounded-lg focus:ring-2 focus:ring-[#3B74B8] focus:outline-none text-xl sm:text-2xl font-semibold"/>
-                                    <div className="flex items-center self-end sm:self-center gap-2">
-                                        <button onClick={handleExtractActions} className="p-2 sm:p-3 rounded-full hover:bg-yellow-100 text-yellow-500 transition-colors" title={language === 'Italiano' ? 'Estrai Azioni (AI)' : 'Extract Actions (AI)'}><SparklesIcon className="h-6 w-6 sm:h-7 sm:w-7" /></button>
-                                        <button onClick={handleDeleteNote} className="p-2 sm:p-3 rounded-full hover:bg-red-100 text-red-500 transition-colors"><TrashIcon className="h-6 w-6 sm:h-7 sm:w-7" /></button>
-                                    </div>
-                                </div>
+                            <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                                <input type="text" value={currentTitle} onChange={e => setCurrentTitle(e.target.value)} placeholder={language === 'Italiano' ? 'Titolo' : 'Title'} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#3B74B8] focus:outline-none text-xl font-bold bg-white text-slate-800" />
+                                <input type="date" value={currentDate} onChange={e => setCurrentDate(e.target.value)} className="p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#3B74B8] focus:outline-none bg-white text-slate-500" />
                             </div>
-                            <textarea ref={textareaRef} onMouseUp={handleMouseUp} value={currentContent} onChange={(e) => setCurrentContent(e.target.value)} placeholder={language === 'Italiano' ? 'Scrivi qui...' : 'Write here...'} className="w-full h-full p-4 border bg-white text-slate-800 border-slate-300 rounded-lg flex-grow resize-none focus:ring-2 focus:ring-[#3B74B8] focus:outline-none text-base sm:text-lg md:text-xl leading-relaxed"></textarea>
+                            <div className="relative flex-grow">
+                                <textarea
+                                    ref={textareaRef}
+                                    onMouseUp={handleMouseUp}
+                                    value={currentContent}
+                                    onChange={e => setCurrentContent(e.target.value)}
+                                    placeholder={language === 'Italiano' ? 'Scrivi qui i tuoi pensieri...' : 'Write your thoughts here...'}
+                                    className="w-full h-full min-h-[40vh] p-3 border border-slate-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#3B74B8] bg-white text-slate-700 leading-relaxed text-lg"
+                                />
+                            </div>
+                            <div className="flex items-center justify-between mt-4">
+                                <button onClick={handleDeleteNote} className="p-2 text-slate-400 hover:text-red-500"><TrashIcon className="h-6 w-6" /></button>
+                                <button onClick={handleExtractTasks} className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-sky-500 rounded-lg hover:bg-sky-600 shadow">
+                                    <SparklesIcon className="h-5 w-5" />
+                                    {language === 'Italiano' ? 'Estrai Attività con AI' : 'Extract Tasks with AI'}
+                                </button>
+                            </div>
                         </>
                     ) : (
-                       <div className="flex flex-col items-center justify-center h-full text-center text-slate-500">
-                            <PencilIcon className="h-20 w-20 sm:h-28 sm:w-28 text-slate-300 mb-4" />
-                            <p className="text-xl sm:text-3xl font-semibold">{language === 'Italiano' ? 'Seleziona un appunto' : 'Select a note'}</p>
-                       </div>
+                        <div className="flex items-center justify-center h-full text-slate-500 italic text-lg">{language === 'Italiano' ? 'Seleziona un appunto o creane uno nuovo.' : 'Select a note or create a new one.'}</div>
                     )}
                 </div>
              </div>
+
+            {selectionPopover && (
+                <div style={{ top: selectionPopover.top, left: selectionPopover.left }} className="absolute z-10 bg-slate-800 text-white rounded-md shadow-lg p-1 selection-popover animate-fade-in-fast">
+                    <button onClick={handleCreateTaskFromSelection} className="px-3 py-1 text-sm font-semibold hover:bg-slate-700 rounded">{language === 'Italiano' ? 'Crea Attività' : 'Create Task'}</button>
+                </div>
+            )}
+
+            <AiSuggestionsModal 
+                visible={aiSuggestions.visible}
+                tasks={aiSuggestions.tasks}
+                loading={aiSuggestions.loading}
+                error={aiSuggestions.error}
+                language={language}
+                onClose={() => setAiSuggestions({ visible: false, tasks: [], loading: false, error: null })}
+                onAdd={handleAddSelectedTasks}
+            />
+
              <div className="flex items-center justify-center gap-4 mt-8">
                 {actions.map((action, index) => <button key={index} onClick={() => onNavigate(action.target)} className="px-10 py-4 text-slate-600 font-semibold rounded-full hover:bg-gray-200/80 transition-colors text-lg sm:text-xl">{action.label[language]}</button>)}
             </div>
-            {aiSuggestions.visible && (
-                <div className="fixed inset-0 bg-black/30 z-40 flex items-center justify-center p-4" onClick={() => setAiSuggestions({visible: false, tasks:[], loading: false, error:''})}>
-                    <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg animate-fade-in-fast" onClick={e => e.stopPropagation()}>
-                        <h3 className="text-xl font-bold text-slate-800 mb-4">{language === 'Italiano' ? 'Azioni Suggerite dall\'AI' : 'AI Suggested Actions'}</h3>
-                        {aiSuggestions.loading && <p>{language === 'Italiano' ? 'Analisi in corso...' : 'Analyzing...'}</p>}
-                        {aiSuggestions.error && <p className="text-red-500 font-semibold">{aiSuggestions.error}</p>}
-                        {aiSuggestions.tasks.length > 0 && (
-                            <ul className="space-y-2 max-h-60 overflow-y-auto">
-                                {aiSuggestions.tasks.map((task, index) => (
-                                    <li key={index} className="flex justify-between items-center p-2 bg-slate-50 rounded">
-                                        <span className="text-slate-700">{task}</span>
-                                        <button onClick={() => handleAddSuggestedTask(task)} className="px-3 py-1 bg-green-500 text-white text-sm font-semibold rounded hover:bg-green-600">
-                                            {language === 'Italiano' ? 'Aggiungi' : 'Add'}
-                                        </button>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                         <button onClick={() => setAiSuggestions({visible: false, tasks:[], loading: false, error:''})} className="mt-4 w-full px-4 py-2 bg-slate-200 text-slate-700 font-semibold rounded-lg hover:bg-slate-300">
-                            {language === 'Italiano' ? 'Chiudi' : 'Close'}
-                        </button>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

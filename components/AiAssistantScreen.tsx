@@ -1,29 +1,19 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { GoogleGenAI, Type } from "@google/genai";
 import { getNotesFromDB, getTasksFromDB } from '../services/firebase.ts';
+import { getAssistantResponse, fileToGenerativePart } from '../services/gemini.ts';
 import { demoData } from '../data/demo.ts';
 import { Language } from '../types.ts';
+import { Note, Task } from '../types/app.ts';
 import { CeleryaAiIcon, PaperClipIcon, UserIcon, XMarkIcon } from './Icons.tsx';
 
 interface AiAssistantScreenProps {
     initialQuery: string;
     onClose: () => void;
-    onExecuteCommand: (command: { action: string, target: string }) => void;
+    onExecuteCommands: (commands: { action: string, payload: any }[]) => void;
     language: Language;
 }
 
-const fileToGenerativePart = async (file: File) => {
-  const base64EncodedDataPromise = new Promise<string>((resolve) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
-    reader.readAsDataURL(file);
-  });
-  return {
-    inlineData: { data: await base64EncodedDataPromise, mimeType: file.type },
-  };
-};
-
-const AiAssistantScreen: React.FC<AiAssistantScreenProps> = ({ initialQuery, onClose, onExecuteCommand, language }) => {
+const AiAssistantScreen: React.FC<AiAssistantScreenProps> = ({ initialQuery, onClose, onExecuteCommands, language }) => {
     const [messages, setMessages] = useState<any[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -47,89 +37,68 @@ const AiAssistantScreen: React.FC<AiAssistantScreenProps> = ({ initialQuery, onC
             setFile(null);
         }
 
-        const notesContextData = await getNotesFromDB();
-        const tasksContextData = await getTasksFromDB();
-
-        const notesContext = notesContextData.map(n => `APPPUNTO (Data: ${n.date}, Titolo: ${n.title}):\n${n.content}`).join('\n\n');
-        const tasksContext = tasksContextData.map(t => `ATTIVITA' (${t.completed ? 'Completata' : 'Da fare'}, Scadenza: ${t.dueDate || 'N/D'}, Progetto: ${t.project}): ${t.content}`).join('\n');
-        const dataContext = `--- APPUNTI DELL'UTENTE ---\n${notesContext}\n\n--- ATTIVITA' DELL'UTENTE ---\n${tasksContext}`;
-
-        const screenInfo = `
-- Schermate navigabili (usa l'ID per il comando 'navigate'):
-    - 'start': La dashboard principale con un riepilogo.
-    - 'agenda': L'agenda dove l'utente scrive e gestisce i suoi appunti.
-    - 'tasks': La lista delle cose da fare (to-do list).
-    - 'why_presentation': Una presentazione sul 'Perché Celerya'.
-    - 'ecosystem': La schermata che descrive la soluzione e l'ecosistema SYD.
-    - 'integrations_presentation': Una presentazione sulle modalità di integrazione.
-    - 'pricing': La schermata con i piani tariffari.
-    - 'applications_hub': Una pagina con link a strumenti esterni utili.`;
-    
-        const appLinksScreen = demoData.screens.find(s => s.id === 'applications_hub');
-        const linksInfo = appLinksScreen?.links?.map(l => `- ${l.label.Italiano}: ${l.href}`).join('\n') || '';
-        const appContext = `\n\n--- INFORMAZIONI SULL'APPLICAZIONE ---\n${screenInfo}\n\n- Link esterni (usa l'URL per il comando 'open_url'):\n${linksInfo}`;
-
-        const fullContext = `${dataContext}${appContext}`;
-
-        const systemInstruction = `Sei l'assistente AI di Celerya. Rispondi in italiano. Il tuo obiettivo è aiutare l'utente rispondendo a domande basate sui suoi dati (appunti, attività) e eseguendo azioni nell'app. Puoi navigare tra le schermate o aprire link esterni. Quando l'utente chiede di vedere una sezione dell'app (es. 'mostrami la mia agenda'), usa il comando 'navigate' con l'ID corretto. Quando chiede di aprire un'applicazione esterna (es. 'apri Planner'), usa 'open_url' con l'URL corretto. Fornisci sempre una 'responseText' conversazionale per confermare l'azione o rispondere alla domanda. Rispondi SOLO con un oggetto JSON valido che corrisponda allo schema fornito.`;
-
-        const commandSchema = {
-            type: Type.OBJECT,
-            properties: {
-                responseText: {
-                    type: Type.STRING,
-                    description: "La risposta testuale e conversazionale da mostrare all'utente, in italiano."
-                },
-                command: {
-                    type: Type.OBJECT,
-                    description: "Un comando opzionale da far eseguire all'applicazione se l'utente ha chiesto un'azione specifica (navigare, aprire URL). Lasciare nullo se l'utente sta solo conversando.",
-                    nullable: true,
-                    properties: {
-                        action: {
-                            type: Type.STRING,
-                            enum: ["navigate", "open_url"],
-                            description: "Il tipo di azione da eseguire."
-                        },
-                        target: {
-                            type: Type.STRING,
-                            description: "L'ID della schermata per l'azione 'navigate', o l'URL completo per l'azione 'open_url'."
-                        }
-                    }
-                }
-            }
-        };
-        
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
-            
-            const contents = { parts: [{ text: `CONTESTO:\n${fullContext}\n\nDOMANDA UTENTE:\n${userQuery}` }] } as any;
-            if(filePart) contents.parts.push(filePart);
-            
-            const response = await ai.models.generateContent({
-                model: "gemini-2.5-flash",
-                contents,
-                config: {
-                    systemInstruction,
-                    responseMimeType: "application/json",
-                    responseSchema: commandSchema,
-                },
-            });
-            
-            const jsonResponse = JSON.parse(response.text);
+            // Costruisci un contesto ricco per l'AI
+            const notesContextData = await getNotesFromDB();
+            const tasksContextData = await getTasksFromDB();
+    
+            const notesContext = notesContextData.map((n: Note) => `- Appunto (ID: ${n.id}, Titolo: ${n.title})`).join('\n');
+            const tasksContext = tasksContextData.map((t: Task) => `- Attività (ID: ${t.id}, Completata: ${t.completed}): ${t.content}`).join('\n');
+            const dataContext = `--- APPUNTI ATTUALI (USA L'ID PER I COMANDI) ---\n${notesContext}\n\n--- ATTIVITÀ ATTUALI (USA L'ID PER I COMANDI) ---\n${tasksContext}`;
+    
+            const screenInfo = `
+--- INFORMAZIONI SULL'APPLICAZIONE ---
+- Schermate navigabili (usa l'ID per il comando 'navigate'):
+    - 'start': La dashboard principale.
+    - 'agenda': L'agenda per gestire gli appunti.
+    - 'tasks': La lista delle cose da fare.
+    - 'why_presentation': Presentazione sul 'Perché Celerya'.
+    - 'ecosystem': Schermata sulla soluzione e l'ecosistema SYD.
+    - 'integrations_presentation': Presentazione sulle modalità di integrazione.
+    - 'pricing': Schermata con i piani tariffari.
+    - 'applications_hub': Pagina con link a strumenti esterni.`;
+        
+            const appLinksScreen = demoData.screens.find(s => s.id === 'applications_hub');
+            const linksInfo = appLinksScreen?.links?.map(l => `- ${l.label.Italiano}: ${l.href}`).join('\n') || '';
+            const appContext = `\n- Link esterni (usa l'URL per il comando 'open_url'):\n${linksInfo}`;
+    
+            const fullContext = `${dataContext}\n\n${screenInfo}${appContext}`;
 
-            setMessages(prev => [...prev, { role: 'model', text: jsonResponse.responseText }]);
+            const jsonResponse = await getAssistantResponse(userQuery, fullContext, filePart, language);
 
-            if (jsonResponse.command && jsonResponse.command.action && jsonResponse.command.target) {
-                onExecuteCommand(jsonResponse.command);
+            if (jsonResponse.error) {
+                setMessages(prev => [...prev, { role: 'model', text: jsonResponse.error, isError: true }]);
+            } else {
+                const hasCommands = jsonResponse.commands && jsonResponse.commands.length > 0;
+                const hasText = jsonResponse.responseText && jsonResponse.responseText.trim() !== '';
+
+                if (hasText) {
+                    setMessages(prev => [...prev, { role: 'model', text: jsonResponse.responseText }]);
+                } else if (hasCommands) {
+                    const confirmation = language === 'Italiano' ? 'Ok, eseguo.' : 'Okay, done.';
+                    setMessages(prev => [...prev, { role: 'model', text: confirmation }]);
+                } else {
+                    const fallbackError = language === 'Italiano' 
+                        ? "Non ho capito bene. Puoi provare a chiedere in un altro modo?" 
+                        : "I didn't quite understand. Can you try asking another way?";
+                    setMessages(prev => [...prev, { role: 'model', text: fallbackError, isError: true }]);
+                }
+                
+                if (hasCommands) {
+                    onExecuteCommands(jsonResponse.commands);
+                }
             }
 
         } catch (error) {
-            console.error("Gemini API Error:", error);
-            setMessages(prev => [...prev, { role: 'model', text: 'Oops! Qualcosa è andato storto. Controlla la chiave API e la console per i dettagli.', isError: true }]);
+            console.error("Assistant Error:", error);
+            const errorMessage = language === 'Italiano' 
+                ? 'Oops! Qualcosa è andato storto. Riprova.' 
+                : 'Oops! Something went wrong. Please try again.';
+            setMessages(prev => [...prev, { role: 'model', text: errorMessage, isError: true }]);
         } finally {
             setIsLoading(false);
         }
-    }, [input, file, onExecuteCommand]);
+    }, [input, file, onExecuteCommands, language]);
 
     useEffect(() => {
         if (initialQuery && messages.length === 0) {
@@ -165,7 +134,7 @@ const AiAssistantScreen: React.FC<AiAssistantScreenProps> = ({ initialQuery, onC
                             {msg.role === 'model' && <CeleryaAiIcon />}
                             <div className={`p-3 sm:p-4 rounded-2xl max-w-md sm:max-w-xl text-base sm:text-lg ${msg.role === 'user' ? 'bg-[#3B74B8] text-white rounded-br-none' : 'bg-slate-100 text-slate-800 rounded-bl-none'}`}>
                                 {msg.file && <div className="mb-2 p-2 bg-black/10 rounded-lg text-sm">Allegato: {msg.file.name}</div>}
-                                {msg.isError ? <p className="text-red-500">{msg.text}</p> : <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: msg.text.replace(/\n/g, '<br />') }}></div>}
+                                {msg.isError ? <p className="text-red-500">{msg.text}</p> : <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: (msg.text || '').replace(/\n/g, '<br />') }}></div>}
                             </div>
                             {msg.role === 'user' && <div className="bg-slate-200 rounded-full p-2 flex items-center justify-center shadow-inner"><UserIcon className="h-5 w-5 sm:h-6 sm:w-6 text-slate-600"/></div>}
                         </div>
