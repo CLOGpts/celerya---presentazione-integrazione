@@ -144,10 +144,12 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ actions, onNavigate, 
         <div className="animate-fade-in w-full">
             <div className="text-center mb-12 sm:mb-16">
                 <div className="relative inline-block">
-                    <h1 className="text-6xl sm:text-8xl font-bold flex items-start justify-center" style={{ color: '#2D5F9D' }}>
-                        <span>Celerya</span>
-                        <span className="text-3xl sm:text-5xl ml-1 sm:ml-2" style={{lineHeight: 0.8}}>®</span>
-                    </h1>
+                    <a href="https://www.celerya.com" target="_blank" rel="noopener noreferrer">
+                        <h1 className="text-6xl sm:text-8xl font-bold flex items-start justify-center" style={{ color: '#2D5F9D' }}>
+                            <span>Celerya</span>
+                            <span className="text-3xl sm:text-5xl ml-1 sm:ml-2" style={{lineHeight: 0.8}}>®</span>
+                        </h1>
+                    </a>
                     <div 
                       className="w-full h-1 absolute -bottom-1"
                       style={{
@@ -158,7 +160,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ actions, onNavigate, 
                     ></div>
                 </div>
                 <p className="text-3xl sm:text-5xl md:text-6xl text-slate-600 mt-12 sm:mt-16">
-                    {language === 'Italiano' ? 'Goditi il tuo business.' : 'Enjoy your business.'}
+                    {language === 'Italiano' ? 'Ciao Claudio, goditi il tuo business.' : 'Hi Claudio, enjoy your business.'}
                 </p>
             </div>
 

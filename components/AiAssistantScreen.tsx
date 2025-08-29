@@ -20,6 +20,7 @@ const AiAssistantScreen: React.FC<AiAssistantScreenProps> = ({ initialQuery, onC
     const [file, setFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const isMounted = useRef(false);
 
     const handleSendMessage = useCallback(async (queryOverride?: string) => {
         const userQuery = queryOverride || input;
@@ -100,11 +101,22 @@ const AiAssistantScreen: React.FC<AiAssistantScreenProps> = ({ initialQuery, onC
         }
     }, [input, file, onExecuteCommands, language]);
 
+    // Esegui la query iniziale solo al primo montaggio
     useEffect(() => {
-        if (initialQuery && messages.length === 0) {
+        if (initialQuery) {
             handleSendMessage(initialQuery);
         }
-    }, [initialQuery, messages.length, handleSendMessage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Resetta la chat quando la lingua cambia (dopo il primo montaggio)
+    useEffect(() => {
+        if (isMounted.current) {
+            setMessages([]);
+        } else {
+            isMounted.current = true;
+        }
+    }, [language]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

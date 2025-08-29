@@ -162,7 +162,7 @@ const App = () => {
           />
       )}
       {demoData.languageSelector && (
-        <div className="absolute top-4 right-4 z-20">
+        <div className="absolute top-4 right-4 z-50">
           <LanguageSelector
             languages={demoData.languages}
             selectedLanguage={language}
@@ -174,7 +174,7 @@ const App = () => {
       <main className="w-full max-w-screen-2xl mx-auto z-10 transition-all duration-300 mt-28">
         <div 
           className={`transition-opacity duration-300 ease-in-out w-full ${isExiting ? 'opacity-0' : 'opacity-100'}`}
-          key={currentScreenId}
+          key={`${currentScreenId}-${language}`}
           >
           {renderScreen()}
         </div>

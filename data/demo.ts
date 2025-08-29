@@ -50,6 +50,10 @@ export const demoData: DemoData = {
         { 
           "label": { "Italiano": "Telegram", "English": "Telegram" }, 
           "href": "https://web.telegram.org/a/" 
+        },
+        { 
+          "label": { "Italiano": "Compliance", "English": "Compliance" }, 
+          "href": "#" 
         }
       ],
       "actions": [
@@ -223,7 +227,7 @@ export const demoData: DemoData = {
             "English": "The receiver works autonomously. It uses an AI module to analyze files, extract structured data, and generate outputs (e.g., Excel, alerts)."
           },
           "tiers": [
-            { "service": { "Italiano": "Sottoscrizione piattaforma SYD", "English": "SYD platform subscription" }, "cost": { "Italiano": "€270 + IVA /anno", "English": "€270 + VAT /year" } },
+            { "service": { "Italiano": "Sottoscrizione piattaforma SYD", "English": "SYD platform subscription" }, "cost": { "Italiano": "€270 + IVA /mese", "English": "€270 + VAT /month" } },
             { "service": { "Italiano": "Integrazione sistemi gestionali", "English": "Management systems integration" }, "cost": { "Italiano": "Prezzo su analisi", "English": "Price on analysis" } },
             { "service": { "Italiano": "Accesso semplificato (cartelle/DB)", "English": "Simplified access (folders/DB)" }, "cost": { "Italiano": "Gratuito", "English": "Free" } },
             { "service": { "Italiano": "Interrogazione AI documenti", "English": "AI document query" }, "cost": { "Italiano": "€0,12 + IVA /pagina", "English": "€0.12 + VAT /page" } }
@@ -237,7 +241,7 @@ export const demoData: DemoData = {
             "English": "The receiver gets data from suppliers already integrated into the platform, via direct APIs or MCP protocol. The information is already structured and accessible via QR code."
           },
           "tiers": [
-            { "service": { "Italiano": "Sottoscrizione piattaforma SYD", "English": "SYD platform subscription" }, "cost": { "Italiano": "€270 + IVA /anno", "English": "€270 + VAT /year" } },
+            { "service": { "Italiano": "Sottoscrizione piattaforma SYD", "English": "SYD platform subscription" }, "cost": { "Italiano": "€270 + IVA /mese", "English": "€270 + VAT /month" } },
             { "service": { "Italiano": "Integrazione sistemi gestionali", "English": "Management systems integration" }, "cost": { "Italiano": "Prezzo su analisi", "English": "Price on analysis" } },
             { "service": { "Italiano": "Accesso semplificato (cartelle/DB)", "English": "Simplified access (folders/DB)" }, "cost": { "Italiano": "Gratuito", "English": "Free" } },
             { "service": { "Italiano": "Chiamata API via QR code", "English": "API call via QR code" }, "cost": { "Italiano": "€0,03 – €0,05 /chiamata", "English": "€0.03 – €0.05 /call" } }

@@ -28,7 +28,7 @@ const EcosystemScreen: React.FC<EcosystemScreenProps> = ({ ecosystem, language, 
       />
 
       {/* SYD Data Gateway Section */}
-      <div className="border border-blue-300 rounded-2xl p-4 sm:p-6 md:p-8 relative mb-12 shadow-lg bg-white">
+      <div className="border border-blue-300 rounded-2xl p-4 sm:p-6 md:p-8 relative shadow-lg bg-white">
         <h2 className="absolute -top-5 sm:-top-6 left-1/2 -translate-x-1/2 bg-white px-4 text-lg sm:text-2xl md:text-3xl font-semibold border border-blue-300 rounded-lg" style={{color: '#3B74B8'}}>
           {ecosystem.gatewayTitle[language]}
         </h2>
@@ -57,20 +57,32 @@ const EcosystemScreen: React.FC<EcosystemScreenProps> = ({ ecosystem, language, 
         </div>
       </div>
       
-      <div className="w-1.5 h-12 bg-black mx-auto"></div>
+      {/* Additional/3rd Parties Services Section - REWORKED */}
+      <div className="relative w-full flex flex-col items-center mt-8">
+        {/* Vertical line connecting from Gateway section */}
+        <div className="w-1.5 h-8 bg-black" aria-hidden="true"></div>
 
-      {/* Additional/3rd Parties Services Section */}
-      <div className="bg-slate-100/70 rounded-2xl p-4 sm:p-6 md:p-8 relative shadow-lg">
-         <h2 className="absolute -top-5 sm:-top-6 left-1/2 -translate-x-1/2 bg-white px-4 text-lg sm:text-xl md:text-3xl font-semibold border-2 border-black rounded-lg text-slate-800 text-center">
-          {ecosystem.servicesTitle[language]}
-        </h2>
-        <div className="relative pt-8">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-full bg-black md:w-auto md:h-1.5 md:left-[5%] md:right-[5%] md:top-auto"></div>
-            <div className="flex flex-col md:flex-row justify-around gap-8 relative">
+        {/* Title Box */}
+        <div className="relative bg-slate-50 px-2 z-20">
+            <h2 className="bg-white px-4 text-lg sm:text-xl md:text-3xl font-semibold border-2 border-black rounded-lg text-slate-800 text-center">
+                {ecosystem.servicesTitle[language]}
+            </h2>
+        </div>
+        
+        {/* Container for the three services and their connectors */}
+        <div className="relative w-full self-stretch bg-slate-100/70 rounded-2xl p-4 sm:p-6 md:p-8 pt-12 md:pt-20 -mt-6">
+            {/* Horizontal Line (desktop only) */}
+            <div className="hidden md:block absolute top-10 left-[10%] right-[10%] h-1.5 bg-black z-0" aria-hidden="true"></div>
+            {/* Vertical Line from title to horizontal line (desktop only) */}
+            <div className="hidden md:block absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-10 bg-black" aria-hidden="true"></div>
+
+            <div className="flex flex-col md:flex-row justify-around items-start gap-8 relative">
                 {ecosystem.services.map((service, index) => (
-                    <div key={index} className="flex flex-col items-center flex-1 min-w-[200px] z-10">
-                        <div className="w-1.5 h-8 bg-black"></div>
-                        <div className="w-full text-center p-4 rounded-xl shadow-lg" style={{backgroundColor: '#086972'}}>
+                    <div key={index} className="relative flex flex-col items-center flex-1 w-full max-w-sm md:max-w-none mx-auto">
+                        {/* Vertical line from horizontal line to item (desktop) */}
+                        <div className="hidden md:block absolute bottom-full w-1.5 h-10 bg-black" aria-hidden="true"></div>
+                        
+                        <div className="w-full text-center p-4 rounded-xl shadow-lg bg-[#086972] z-10">
                             <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">{service.title[language]}</h3>
                         </div>
                         <p 
@@ -82,6 +94,7 @@ const EcosystemScreen: React.FC<EcosystemScreenProps> = ({ ecosystem, language, 
             </div>
         </div>
       </div>
+
 
       {/* Actions */}
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mt-16 flex-wrap">
@@ -149,7 +162,7 @@ const EcosystemScreen: React.FC<EcosystemScreenProps> = ({ ecosystem, language, 
             boxShadow: '0 10px 15px -3px rgba(59, 116, 184, 0.3), 0 4px 6px -2px rgba(59, 116, 184, 0.2)',
           }}
         >
-          Assistente Virtuale
+          Celerya(CVO)
         </a>
       </div>
     </div>
